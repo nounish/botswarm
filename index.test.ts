@@ -8,8 +8,6 @@ const { NounsPool } = contracts.sepolia;
 const { watch, log, addTask } = BotSwarm();
 
 watch(NounsPool, "BidPlaced", ({ blockNumber, args }) => {
-  log.info("Bid placed on Nouns Pool");
-
   addTask({
     id: `castVote:${args.propId}`,
     chain: sepolia,

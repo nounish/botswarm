@@ -1,7 +1,7 @@
 import { mainnet } from "viem/chains";
 import { contracts } from "./botswarm.config";
-import castVote from "./src/tasks/castVote";
 import BotSwarm from "./src/BotSwarm";
+import castVote from "./src/tasks/castVote";
 
 const { NounsPool } = contracts.ethereum;
 
