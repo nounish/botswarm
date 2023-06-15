@@ -13,7 +13,7 @@ import env from "dotenv";
 env.config();
 
 export const wallets = {
-  ethereum: createWalletClient({
+  homestead: createWalletClient({
     account: privateKeyToAccount(process.env.PRIVATE_KEY as Address),
     chain: mainnet,
     transport: http(),
@@ -26,7 +26,7 @@ export const wallets = {
 };
 
 export const clients = {
-  ethereum: createPublicClient({
+  homestead: createPublicClient({
     chain: mainnet,
     transport: http(),
   }),
@@ -37,7 +37,7 @@ export const clients = {
 };
 
 export const contracts = {
-  ethereum: {
+  homestead: {
     NounsPool: getContract({
       address: "0xFBA3912Ca04dd458c843e2EE08967fC04f3579c2",
       abi: [
@@ -45,24 +45,20 @@ export const contracts = {
         //   "function castVote(uint256 proposalId, uint8 support) external",
         //   "event BidPlaced(address indexed dao, uint256 indexed propId, uint256 support, uint256 amount, address bidder)",
         // ]),
-        parseAbiItem(
-          "function castVote(uint256 proposalId, uint8 support) external"
-        ),
+        parseAbiItem("function castVote(uint256 _pId) external"),
         parseAbiItem(
           "event BidPlaced(address indexed dao, uint256 indexed propId, uint256 support, uint256 amount, address bidder)"
         ),
       ],
-      publicClient: clients.ethereum,
-      walletClient: wallets.ethereum,
+      publicClient: clients.homestead,
+      walletClient: wallets.homestead,
     }),
   },
   sepolia: {
     NounsPool: getContract({
       address: "0xd27dfb807DC3435AC3e14b55FcF1B50F96fF769a",
       abi: [
-        parseAbiItem(
-          "function castVote(uint256 proposalId, uint8 support) external"
-        ),
+        parseAbiItem("function castVote(uint256 _pId) external"),
         parseAbiItem(
           "event BidPlaced(address indexed dao, uint256 indexed propId, uint256 support, uint256 amount, address bidder)"
         ),

@@ -1,44 +1,35 @@
 import { Chain } from "viem";
 import logger from "./logger";
+import { Chains } from "../../botswarm.config";
+
+export type Task = {
+  id: string;
+  chain: Chains;
+  block: bigint;
+  execute: () => Promise<boolean>;
+};
 
 export default function scheduler(log: ReturnType<typeof logger>) {
-  let tasks: Array<{
-    id: string;
-    chain: string;
-    block: bigint;
-    execute: Function;
-  }> = [];
+  let tasks: Task[] = [];
 
-  function addTask(args: {
-    id: string;
-    chain: Chain;
-    block: bigint;
-    task: () => Promise<boolean>;
-  }) {
-    const exists = tasks.find((task) => task.id === args.id);
+  function addTask(task: Task) {
+    const exists = tasks.find((task) => task.id === task.id);
 
     if (exists) {
       log.error(
         `Failed to schedule ${log.colors.red(
-          args.id
-        )} for block ${log.colors.yellow(Number(args.block))} on ${
-          args.chain.name
-        }`
+          task.id
+        )} for block ${log.colors.yellow(Number(task.block))} on ${task.chain}`
       );
       return false;
     }
 
-    tasks.push({
-      id: args.id,
-      chain: args.chain.name,
-      block: args.block,
-      execute: args.task,
-    });
+    tasks.push(task);
 
     log.info(
-      `Task ${log.colors.blue(args.id)} scheduled for block ${log.colors.yellow(
-        Number(args.block)
-      )} on ${args.chain}`
+      `Task ${log.colors.blue(task.id)} scheduled for block ${log.colors.yellow(
+        Number(task.block)
+      )} on ${task.chain}`
     );
 
     return true;
