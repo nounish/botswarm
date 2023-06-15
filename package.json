@@ -1,0 +1,23 @@
+{
+  "name": "@nounish/botswarm",
+  "version": "0.0.1",
+  "description": "",
+  "scripts": {
+    "start": "ts-node index.ts",
+    "test:castVote": "ts-node test/castVote.test.ts"
+  },
+  "dependencies": {
+    "dotenv": "^16.1.4",
+    "figlet": "^1.6.0",
+    "kleur": "^4.1.5",
+    "nanospinner": "^1.1.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.4",
+    "viem": "^1.0.0",
+    "vitest": "^0.32.0"
+  },
+  "devDependencies": {
+    "@types/figlet": "^1.5.6",
+    "@types/node": "^20.3.1"
+  }
+}
