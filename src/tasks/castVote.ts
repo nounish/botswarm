@@ -10,6 +10,7 @@ export default function castVote(args: {
     id: `castVote:${args.proposalId}`,
     chain: args.chain,
     block: args.block,
+    isExecuting: false,
     execute: async () => {
       const hash = await contracts[args.chain].NounsPool.write.castVote([
         args.proposalId,

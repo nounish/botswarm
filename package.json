@@ -1,10 +1,13 @@
 {
   "name": "@nounish/botswarm",
   "version": "0.0.1",
-  "description": "",
+  "description": "A typesafe cross chain MEV bot for scheduling and executing tasks at specific blocks or events.",
   "scripts": {
     "start": "ts-node index.ts",
-    "test:castVote": "ts-node test/castVote.test.ts"
+    "test": "ts-node index.test.ts",
+    "test:lib": "vitest lib",
+    "test:tasks": "vitest tasks",
+    "test:utils": "vitest utils"
   },
   "dependencies": {
     "dotenv": "^16.1.4",
@@ -13,11 +16,11 @@
     "nanospinner": "^1.1.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.4",
-    "viem": "^1.0.0",
-    "vitest": "^0.32.0"
+    "viem": "^1.0.0"
   },
   "devDependencies": {
     "@types/figlet": "^1.5.6",
-    "@types/node": "^20.3.1"
+    "@types/node": "^20.3.1",
+    "vitest": "^0.32.2"
   }
 }

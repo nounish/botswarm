@@ -12,7 +12,13 @@ export default function BotSwarm() {
     client.watchBlockNumber({
       onBlockNumber: async (block) => {
         for (const task of tasks()) {
-          if (task.chain === chain && task.block <= block) {
+          if (
+            !task.isExecuting &&
+            task.chain === chain &&
+            task.block <= block
+          ) {
+            task.isExecuting = true;
+
             log.executing(
               `Executing task ${log.colors.blue(
                 task.id
@@ -26,6 +32,8 @@ export default function BotSwarm() {
               log.success(`Task ${log.colors.green(task.id)} completed`);
             } else {
               // TODO: Add logic to retry task if failed
+              // - Task is already set to executing, so it won't be
+              //   executed again unless stated here
               log.error(`Task ${log.colors.red(task.id)} failed`);
             }
           }

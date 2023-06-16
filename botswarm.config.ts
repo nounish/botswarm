@@ -10,15 +10,18 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 import { mainnet, sepolia } from "viem/chains";
 import env from "dotenv";
+// import createConfig from "./src/utils/createConfig";
 env.config();
 
+export type Chains = keyof typeof contracts;
+
 export const wallets = {
-  homestead: createWalletClient({
+  [mainnet.network]: createWalletClient({
     account: privateKeyToAccount(process.env.PRIVATE_KEY as Address),
     chain: mainnet,
     transport: http(),
   }),
-  sepolia: createWalletClient({
+  [sepolia.network]: createWalletClient({
     account: privateKeyToAccount(process.env.PRIVATE_KEY as Address),
     chain: sepolia,
     transport: http(),
@@ -26,18 +29,18 @@ export const wallets = {
 };
 
 export const clients = {
-  homestead: createPublicClient({
+  [mainnet.network]: createPublicClient({
     chain: mainnet,
     transport: http(),
   }),
-  sepolia: createPublicClient({
+  [sepolia.network]: createPublicClient({
     chain: sepolia,
     transport: http(),
   }),
 };
 
 export const contracts = {
-  homestead: {
+  [mainnet.network]: {
     NounsPool: getContract({
       address: "0xFBA3912Ca04dd458c843e2EE08967fC04f3579c2",
       abi: [
@@ -54,7 +57,7 @@ export const contracts = {
       walletClient: wallets.homestead,
     }),
   },
-  sepolia: {
+  [sepolia.network]: {
     NounsPool: getContract({
       address: "0xd27dfb807DC3435AC3e14b55FcF1B50F96fF769a",
       abi: [
@@ -69,4 +72,21 @@ export const contracts = {
   },
 };
 
-export type Chains = keyof typeof contracts;
+// const testConfig = createConfig([
+//   {
+//     name: "NounsPool",
+//     abi: [
+//       "function castVote(uint256 _pId) external",
+//       "event BidPlaced(address indexed dao, uint256 indexed propId, uint256 support, uint256 amount, address bidder)",
+//     ],
+//     deployments: [
+//       { chain: mainnet, address: "0xFBA3912Ca04dd458c843e2EE08967fC04f3579c2" },
+//       { chain: sepolia, address: "0xd27dfb807DC3435AC3e14b55FcF1B50F96fF769a" },
+//     ],
+//   },
+//   {
+//     name: "Uniswap",
+//     abi: ["function swap(uint256 _num) external"],
+//     deployments: [{ chain: mainnet, address: "0x0000" }],
+//   },
+// ]);

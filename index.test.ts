@@ -5,7 +5,7 @@ import castVote from "./src/tasks/castVote";
 
 const { NounsPool } = contracts.sepolia;
 
-const { watch, log, addTask } = BotSwarm();
+const { watch, addTask } = BotSwarm();
 
 watch(NounsPool, "BidPlaced", ({ blockNumber, args }) => {
   if (args.propId) {
