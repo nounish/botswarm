@@ -1,8 +1,23 @@
 import { createSpinner } from "nanospinner";
 import figlet from "figlet";
 import kleur from "kleur";
+import { description, version } from "../../package.json";
 
-export default function logger(defaultMessage: string) {
+export default function logger(
+  defaultMessage: string,
+  options?: { testing?: boolean }
+) {
+  // We don't want to log anything during unit tests
+  if (options?.testing) {
+    return {
+      info: (message: string) => {},
+      success: (message: string) => {},
+      error: (message: string) => {},
+      executing: (message: string) => {},
+      colors: kleur,
+    };
+  }
+
   console.log(
     figlet.textSync("BotSwarm", {
       font: "ANSI Shadow",
@@ -12,6 +27,9 @@ export default function logger(defaultMessage: string) {
       whitespaceBreak: true,
     })
   );
+
+  console.log(kleur.blue(description));
+  console.log(`\nVersion: ${kleur.magenta(version)}\n`);
 
   let state = createSpinner(defaultMessage).start();
 
