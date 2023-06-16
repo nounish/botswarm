@@ -81,7 +81,7 @@ Tests are broken up into 4 categories
 
 ## npm run test
 
-This runs a mirrored version of `index.ts` but on the sepolia network. It includes code that automates creation of proposals and submission of bids to the NounsPool.
+This runs a mirrored version of `index.ts` but on the sepolia network. It includes code that automates creation of proposals in NounsDAO and submission of bids to the NounsPool.
 
 ## npm run test:lib
 
