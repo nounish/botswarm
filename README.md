@@ -36,6 +36,8 @@ PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 
 To run code on contract events, use the watch method and provide the contract and event name to track.
 
+In this example, "New BidPlaced event!" is logged to the console every time the BidPlaced event is emitted on the NounsPool contract that is deployed on the Sepolia network
+
 ```typescript
 import BotSwarm from "./src/BotSwarm";
 import { contracts } from "./botswarm.config";
@@ -43,7 +45,7 @@ import { contracts } from "./botswarm.config";
 const { watch } = BotSwarm();
 
 watch(contracts.sepolia.NounsPool, "BidPlaced", (event) => {
-    /* This runs every time the BidPlaced event is emitted on the NounsPool contract that is deployed on the Sepolia network */
+    console.log("New BidPlaced event!")
 });
 ```
 
