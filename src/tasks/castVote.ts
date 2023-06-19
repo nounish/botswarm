@@ -12,6 +12,14 @@ export default function castVote(args: {
     block: args.block,
     isExecuting: false,
     execute: async () => {
+      // const bid = await contracts[args.chain].NounsPool.read.getBid([
+      //   args.proposalId,
+      // ]);
+
+      // if (bid.executed) {
+      //   return false;
+      // }
+
       const hash = await contracts[args.chain].NounsPool.write.castVote([
         args.proposalId,
       ]);

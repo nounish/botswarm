@@ -77,20 +77,12 @@ watch(contracts.sepolia.NounsPool, "BidPlaced", ({ blockNumber, args }) => {
 
 # Testing
 
-Tests are broken up into 4 categories
+Tests are broken up into 2 categories
 
 ## npm run test
 
-This runs a mirrored version of `index.ts` but on the sepolia network. It includes code that automates creation of proposals in NounsDAO and submission of bids to the NounsPool.
+This runs a mirrored version of `index.ts` but on the sepolia network. It includes code that automates the creation of a new proposal in NounsDAO prior to starting the bot.
 
 ## npm run test:lib
 
 Unit tests everything in the `src/lib` directory which include all the components that make up a `src/BotSwarm` instance.
-
-## npm run test:tasks
-
-Unit tests custom prebuilt tasks in the `src/tasks` directory.
-
-## npm run test:utils
-
-Unit tests all the utilities in `src/utils`.

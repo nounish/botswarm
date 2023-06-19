@@ -7,7 +7,9 @@ const { NounsPool } = contracts.homestead;
 
 const { watch, addTask } = BotSwarm();
 
-watch(NounsPool, "BidPlaced", ({ blockNumber, args }) => {
+watch(NounsPool, "BidPlaced", async ({ blockNumber, args }) => {
+  // const config = await NounsPool.read._cfg();
+
   if (args.propId) {
     addTask(
       castVote({
