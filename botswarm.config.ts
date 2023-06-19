@@ -2,8 +2,6 @@ import { mainnet, sepolia } from "viem/chains";
 import NounsPool from "./contracts/NounsPool";
 import NounsDAOLogicV2 from "./contracts/NounsDAOLogicV2";
 import createConfig from "./src/utils/createConfig";
-import env from "dotenv";
-env.config();
 
 export const { clients, wallets, contracts } = createConfig({
   NounsPool: {

@@ -14,7 +14,6 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 import { Chain } from "viem/chains";
 import env from "dotenv";
-
 env.config();
 
 type Contract = {

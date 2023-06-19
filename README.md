@@ -23,7 +23,30 @@ const botswarm = BotSwarm();
 
 # Configuration
 
-BotSwarm pulls all of its configuration from the `botswarm.config.ts` file which holds information about each contract and Viem clients/wallets.
+BotSwarm pulls all of its configuration from the `botswarm.config.ts` file which uses the createConfig method to generate Viem contract, client, and wallet instances based on the data passed into it.
+
+```typescript
+import { mainnet, sepolia } from "viem/chains";
+import createConfig from "./src/utils/createConfig";
+import NounsPool from "./contracts/NounsPool";
+import NounsDAOLogicV2 from "./contracts/NounsDAOLogicV2";
+
+export const { clients, wallets, contracts } = createConfig({
+  NounsPool: {
+    abi: NounsPool,
+    deployments: [
+      { chain: mainnet, address: "0xFBA3912Ca04dd458c843e2EE08967fC04f3579c2" },
+      { chain: sepolia, address: "0xd27dfb807DC3435AC3e14b55FcF1B50F96fF769a" },
+    ],
+  },
+  NounsDAOLogicV2: {
+    abi: NounsDAOLogicV2,
+    deployments: [
+      { chain: sepolia, address: "0x75D84FC49Dc8A423604BFCd46E0AB7D340D5ea38" },
+    ],
+  },
+});
+```
 
 The wallet client is created for each chain using the private key stored in `.env`
 
