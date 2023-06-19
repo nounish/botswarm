@@ -42,10 +42,14 @@ In this example, "New BidPlaced event!" is logged to the console every time the 
 import BotSwarm from "./src/BotSwarm";
 import { contracts } from "./botswarm.config";
 
-const { watch } = BotSwarm();
+const botswarm = BotSwarm();
 
-watch(contracts.sepolia.NounsPool, "BidPlaced", (event) => {
-    console.log("New BidPlaced event!")
+contracts.NounsPool.sepolia.watchEvent("BidPlaced", {}, {
+    onLogs: (events) => {
+        for (const event of events) {
+             console.log("New BidPlaced event!")
+        }
+    }
 });
 ```
 
@@ -57,21 +61,23 @@ This example adds a task that executes 10 blocks after the block the BidPlaced e
 
 ```typescript
 import BotSwarm from "./src/BotSwarm";
-import { contracts } from "./botswarm.config";
-import { sepolia } from "viem/chains";
 
-const { watch, addTask } = BotSwarm();
+const { addTask, contracts } = BotSwarm();
 
-watch(contracts.sepolia.NounsPool, "BidPlaced", ({ blockNumber, args }) => {
-    addTask({
-        id: `castVote:${args.propId}`,
-        chain: sepolia.network,
-        block: blockNumber + 10n,
-        execute: async () => {
-            console.log("Executing task")
-            return true
-        },
-     });
+contracts.NounsPool.sepolia.watchEvent("BidPlaced", {}, {
+    onLogs: (events) => {
+        for (const { blockNumber, args } of events) {
+            addTask({
+                id: `castVote:${args.propId}`,
+                chain: sepolia.network,
+                block: blockNumber + 10n,
+                execute: async () => {
+                    console.log("Executing task")
+                    return true
+                },
+            });
+        }
+    }
 });
 ```
 
@@ -83,6 +89,6 @@ Tests are broken up into 2 categories
 
 This runs a mirrored version of `index.ts` but on the sepolia network. It includes code that automates the creation of a new proposal in NounsDAO prior to starting the bot.
 
-## npm run test:lib
+## npm run test:unit
 
-Unit tests everything in the `src/lib` directory which include all the components that make up a `src/BotSwarm` instance.
+Unit tests everything in the `src` directory.
