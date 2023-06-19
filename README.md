@@ -34,7 +34,7 @@ PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 
 # Events
 
-To run code on contract events, use the watch method and provide the contract and event name to track.
+To run code on contract events, use the watchEvent method from Viem and provide the contract and event name to track.
 
 In this example, "New BidPlaced event!" is logged to the console every time the BidPlaced event is emitted on the NounsPool contract that is deployed on the Sepolia network
 
