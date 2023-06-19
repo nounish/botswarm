@@ -1,10 +1,10 @@
 // WORK IN PROGRESS: Meant to simplify botswarm.config.ts
 
 import {
+  Abi,
   Address,
   GetContractReturnType,
   HttpTransport,
-  ParseAbi,
   PrivateKeyAccount,
   PublicClient,
   WalletClient,
@@ -16,16 +16,11 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 import { Chain } from "viem/chains";
 import env from "dotenv";
+
 env.config();
 
-// type Prettify<T> = T extends infer R
-//   ? {
-//       [K in keyof R]: R[K];
-//     }
-//   : never;
-
 type Contract = {
-  readonly abi: readonly string[];
+  readonly abi: Abi;
   readonly deployments: Array<{
     readonly chain: Chain;
     readonly address: Address;
@@ -54,8 +49,7 @@ type Contracts<
 > = {
   [TContract in keyof TContracts]: {
     [TDeployment in TContracts[TContract]["deployments"][number] as TDeployment["chain"]["network"]]: GetContractReturnType<
-      // TODO: Extract the abi type
-      ParseAbi<TContracts[TContract]["abi"]>,
+      TContracts[TContract]["abi"],
       TClients[TDeployment["chain"]["network"]],
       TWallets[TDeployment["chain"]["network"]],
       TDeployment["address"]
@@ -90,6 +84,7 @@ export default function createConfig<
   let contractInstances = {} as Record<string, Record<string, unknown>>;
 
   for (const [name, contract] of Object.entries(contracts)) {
+    contractInstances[name] = {} as Record<string, unknown>;
     for (const deployment of contract.deployments) {
       contractInstances[name][deployment.chain.network] = getContract({
         address: deployment.address,

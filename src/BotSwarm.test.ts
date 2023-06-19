@@ -1,11 +1,10 @@
 import { describe, expect, it } from "vitest";
-import scheduler from "./scheduler";
-import logger from "./logger";
 import { sepolia } from "viem/chains";
+import BotSwarm from "./BotSwarm";
 
-const { tasks, addTask, removeTask } = scheduler(logger("", { testing: true }));
+const { tasks, addTask, removeTask } = BotSwarm();
 
-describe("scheduler", () => {
+describe("BotSwarm", () => {
   const task = {
     id: "test:1",
     chain: sepolia.network,

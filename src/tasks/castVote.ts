@@ -1,8 +1,8 @@
-import { Task } from "../lib/scheduler";
-import { Chains, contracts, clients } from "../../botswarm.config";
+import { Task } from "../BotSwarm";
+import { contracts, clients } from "../../botswarm.config";
 
 export default function castVote(args: {
-  chain: Chains;
+  chain: keyof typeof clients;
   block: bigint;
   proposalId: bigint;
 }): Task {
@@ -12,15 +12,15 @@ export default function castVote(args: {
     block: args.block,
     isExecuting: false,
     execute: async () => {
-      // const bid = await contracts[args.chain].NounsPool.read.getBid([
-      //   args.proposalId,
-      // ]);
+      const bid = await contracts.NounsPool[args.chain].read.getBid([
+        args.proposalId,
+      ]);
 
-      // if (bid.executed) {
-      //   return false;
-      // }
+      if (bid.executed) {
+        return false;
+      }
 
-      const hash = await contracts[args.chain].NounsPool.write.castVote([
+      const hash = await contracts.NounsPool[args.chain].write.castVote([
         args.proposalId,
       ]);
 

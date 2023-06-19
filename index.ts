@@ -3,20 +3,25 @@ import { contracts } from "./botswarm.config";
 import BotSwarm from "./src/BotSwarm";
 import castVote from "./src/tasks/castVote";
 
-const { NounsPool } = contracts.homestead;
+const { NounsPool } = contracts;
 
-const { watch, addTask } = BotSwarm();
+const { addTask } = BotSwarm();
 
-watch(NounsPool, "BidPlaced", async ({ blockNumber, args }) => {
-  // const config = await NounsPool.read._cfg();
-
-  if (args.propId) {
-    addTask(
-      castVote({
-        chain: mainnet.network,
-        block: blockNumber,
-        proposalId: args.propId,
-      })
-    );
+NounsPool.homestead.watchEvent.BidPlaced(
+  {},
+  {
+    onLogs: (events) => {
+      for (const { blockNumber, args } of events) {
+        if (blockNumber && args.propId) {
+          addTask(
+            castVote({
+              chain: "homestead",
+              block: blockNumber,
+              proposalId: args.propId,
+            })
+          );
+        }
+      }
+    },
   }
-});
+);
