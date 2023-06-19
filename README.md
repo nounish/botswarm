@@ -40,9 +40,8 @@ In this example, "New BidPlaced event!" is logged to the console every time the 
 
 ```typescript
 import BotSwarm from "./src/BotSwarm";
-import { contracts } from "./botswarm.config";
 
-const botswarm = BotSwarm();
+const { contracts } = BotSwarm();
 
 contracts.NounsPool.sepolia.watchEvent("BidPlaced", {}, {
     onLogs: (events) => {
