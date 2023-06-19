@@ -1,5 +1,3 @@
-// WORK IN PROGRESS: Meant to simplify botswarm.config.ts
-
 import {
   Abi,
   Address,

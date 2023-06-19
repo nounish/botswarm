@@ -1,12 +1,11 @@
-import { contracts } from "./botswarm.config";
 import BotSwarm from "./src/BotSwarm";
 import castVote from "./src/tasks/castVote";
 import setupTest from "./src/utils/setupTest";
 
-const { NounsPool } = contracts;
-
 setupTest(async () => {
-  const { addTask } = BotSwarm();
+  const { addTask, contracts } = BotSwarm();
+
+  const { NounsPool } = contracts;
 
   NounsPool.sepolia.watchEvent.BidPlaced(
     {},

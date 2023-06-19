@@ -1,11 +1,9 @@
-import { mainnet } from "viem/chains";
-import { contracts } from "./botswarm.config";
 import BotSwarm from "./src/BotSwarm";
 import castVote from "./src/tasks/castVote";
 
-const { NounsPool } = contracts;
+const { addTask, contracts } = BotSwarm();
 
-const { addTask } = BotSwarm();
+const { NounsPool } = contracts;
 
 NounsPool.homestead.watchEvent.BidPlaced(
   {},

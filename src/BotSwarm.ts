@@ -1,5 +1,5 @@
 import { createSpinner } from "nanospinner";
-import { clients } from "../botswarm.config";
+import { clients, wallets, contracts } from "../botswarm.config";
 import colors from "kleur";
 import figlet from "figlet";
 import { description, version } from "../package.json";
@@ -130,5 +130,8 @@ export default function BotSwarm() {
     tasks: () => tasks,
     addTask,
     removeTask,
+    contracts,
+    clients,
+    wallets,
   };
 }

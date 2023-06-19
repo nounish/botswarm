@@ -5,7 +5,7 @@
   "scripts": {
     "start": "ts-node index.ts",
     "test": "ts-node index.test.ts",
-    "test:lib": "vitest lib"
+    "test:unit": "vitest src"
   },
   "dependencies": {
     "dotenv": "^16.1.4",
