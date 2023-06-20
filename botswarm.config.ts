@@ -3,7 +3,7 @@ import NounsPool from "./contracts/NounsPool";
 import NounsDAOLogicV2 from "./contracts/NounsDAOLogicV2";
 import createConfig from "./src/utils/createConfig";
 
-export const { clients, wallets, contracts } = createConfig({
+export default createConfig({
   NounsPool: {
     abi: NounsPool,
     deployments: [
@@ -14,6 +14,7 @@ export const { clients, wallets, contracts } = createConfig({
   NounsDAOLogicV2: {
     abi: NounsDAOLogicV2,
     deployments: [
+      { chain: mainnet, address: "0x6f3E6272A167e8AcCb32072d08E0957F9c79223d" },
       { chain: sepolia, address: "0x75D84FC49Dc8A423604BFCd46E0AB7D340D5ea38" },
     ],
   },

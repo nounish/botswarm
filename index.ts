@@ -3,19 +3,25 @@ import castVote from "./src/tasks/castVote";
 
 const { addTask, contracts } = BotSwarm();
 
-const { NounsPool } = contracts;
+const { NounsPool, NounsDAOLogicV2 } = contracts;
 
 NounsPool.homestead.watchEvent.BidPlaced(
   {},
   {
-    onLogs: (events) => {
-      for (const { blockNumber, args } of events) {
-        if (blockNumber && args.propId) {
+    onLogs: async (events) => {
+      for (const { args } of events) {
+        if (args.propId) {
+          const config = await NounsPool.homestead.read.getConfig();
+          const proposal = await NounsDAOLogicV2.homestead.read.proposals([
+            args.propId,
+          ]);
+
           addTask(
             castVote({
+              id: `castVote:${args.propId}`,
               chain: "homestead",
-              block: blockNumber,
-              proposalId: args.propId,
+              block: proposal.endBlock - config.castWindow,
+              proposal: args.propId,
             })
           );
         }

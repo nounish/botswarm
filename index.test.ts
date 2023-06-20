@@ -5,7 +5,7 @@ import setupTest from "./src/utils/setupTest";
 setupTest(async () => {
   const { addTask, contracts } = BotSwarm();
 
-  const { NounsPool } = contracts;
+  const { NounsPool, NounsDAOLogicV2 } = contracts;
 
   NounsPool.sepolia.watchEvent.BidPlaced(
     {},
@@ -13,17 +13,17 @@ setupTest(async () => {
       onLogs: async (events) => {
         for (const { args } of events) {
           if (args.propId) {
-            const config = await contracts.NounsPool.sepolia.read.getConfig();
-            const proposal =
-              await contracts.NounsDAOLogicV2.sepolia.read.proposals([
-                args.propId,
-              ]);
+            const config = await NounsPool.sepolia.read.getConfig();
+            const proposal = await NounsDAOLogicV2.sepolia.read.proposals([
+              args.propId,
+            ]);
 
             addTask(
               castVote({
+                id: `castVote:${args.propId}`,
                 chain: "sepolia",
                 block: proposal.endBlock - config.castWindow,
-                proposalId: args.propId,
+                proposal: args.propId,
               })
             );
           }

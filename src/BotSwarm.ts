@@ -1,74 +1,20 @@
-import { createSpinner } from "nanospinner";
-import { clients, wallets, contracts } from "../botswarm.config";
+import config from "../botswarm.config";
 import colors from "kleur";
-import figlet from "figlet";
-import { description, version } from "../package.json";
-
-const defaultMessage = "Waiting for task";
-
-let state = createSpinner(defaultMessage).start();
-
-const log = {
-  start: () => {
-    console.log(
-      figlet.textSync("BotSwarm", {
-        font: "ANSI Shadow",
-        horizontalLayout: "default",
-        verticalLayout: "default",
-        width: 80,
-        whitespaceBreak: true,
-      })
-    );
-
-    console.log(colors.blue(description));
-    console.log(`\nVersion: ${colors.magenta(version)}\n`);
-  },
-  info: (message: string) => {
-    state.warn({
-      text: message,
-      mark: "🔹",
-    });
-    state = createSpinner(defaultMessage).start();
-  },
-  success: (message: string) => {
-    state.success({
-      text: message,
-    });
-    state = createSpinner(defaultMessage).start();
-  },
-  error: (message: string) => {
-    state.error({
-      text: message,
-    });
-    state = createSpinner(defaultMessage).start();
-  },
-  executing: (message: string) => {
-    state.update({
-      text: message,
-      color: "blue",
-    });
-  },
-};
+import logger from "./utils/logger";
 
 export type Task = {
   id: string;
-  chain: keyof typeof clients;
+  chain: keyof typeof config.clients;
   block: bigint;
-  isExecuting: boolean;
-  execute: () => Promise<boolean>;
+  execute: () => Promise<string>;
 };
 
 export default function BotSwarm() {
-  log.start();
+  const log = logger("Waiting for task");
 
-  let tasks: Task[] = [];
+  let tasks: Array<Task & { isExecuting: boolean }> = [];
 
-  function addTask(task: {
-    id: string;
-    chain: Task["chain"];
-    block: bigint;
-    execute: () => Promise<boolean>;
-  }) {
+  function addTask(task: Task) {
     const exists = tasks.find((task) => task.id === task.id);
 
     if (exists) {
@@ -93,7 +39,7 @@ export default function BotSwarm() {
     }
   }
 
-  for (const [chain, client] of Object.entries(clients)) {
+  for (const [chain, client] of Object.entries(config.clients)) {
     client.watchBlockNumber({
       onBlockNumber: async (block) => {
         for (const task of tasks) {
@@ -111,7 +57,7 @@ export default function BotSwarm() {
             );
 
             try {
-              await task.execute();
+              const response = await task.execute();
               log.success(`Task ${colors.green(task.id)} was executed`);
             } catch (error) {
               log.error(error as string);
@@ -130,8 +76,8 @@ export default function BotSwarm() {
     tasks: () => tasks,
     addTask,
     removeTask,
-    contracts,
-    clients,
-    wallets,
+    contracts: config.contracts,
+    clients: config.clients,
+    wallets: config.wallets,
   };
 }

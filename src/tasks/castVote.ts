@@ -1,38 +1,40 @@
 import { Task } from "../BotSwarm";
-import { contracts, clients } from "../../botswarm.config";
+import config from "../../botswarm.config";
 
 export default function castVote(args: {
-  chain: keyof typeof clients;
-  block: bigint;
-  proposalId: bigint;
+  id: Task["id"];
+  chain: Task["chain"];
+  block: Task["block"];
+  proposal: bigint;
 }): Task {
   return {
-    id: `castVote:${args.proposalId}`,
+    id: args.id,
     chain: args.chain,
     block: args.block,
-    isExecuting: false,
     execute: async () => {
-      const bid = await contracts.NounsPool[args.chain].read.getBid([
-        args.proposalId,
+      const bid = await config.contracts.NounsPool[args.chain].read.getBid([
+        args.proposal,
       ]);
 
       if (bid.executed) {
-        return false;
+        return `Vote was already cast for proposal ${args.proposal}`;
       }
 
-      const hash = await contracts.NounsPool[args.chain].write.castVote([
-        args.proposalId,
+      const hash = await config.contracts.NounsPool[args.chain].write.castVote([
+        args.proposal,
       ]);
 
-      const result = await clients[args.chain].waitForTransactionReceipt({
-        hash,
-      });
+      const result = await config.clients[args.chain].waitForTransactionReceipt(
+        {
+          hash,
+        }
+      );
 
       if (result.status === "reverted") {
-        return false;
+        return `castVote reverted for proposal ${args.proposal}`;
       }
 
-      return true;
+      return `Vote was sucessfully cast for proposal ${args.proposal}`;
     },
   };
 }

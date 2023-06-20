@@ -9,7 +9,7 @@ describe("BotSwarm", () => {
     id: "test:1",
     chain: sepolia.network,
     block: 0n,
-    execute: async () => true,
+    execute: async () => "",
   };
 
   it("should schedule a task", () => {

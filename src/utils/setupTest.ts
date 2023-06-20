@@ -1,16 +1,16 @@
-import { contracts, clients, wallets } from "../../botswarm.config";
+import config from "../../botswarm.config";
 import crypto from "crypto";
 import { createSpinner } from "nanospinner";
 
-const { NounsDAOLogicV2 } = contracts;
+const { NounsDAOLogicV2 } = config.contracts;
 
 export default async function setupTest(callback: () => Promise<void>) {
   const spinner = createSpinner(
-    `Retrieving latest proposal from ${wallets.sepolia.account.address}...`
+    `Retrieving latest proposal from ${config.wallets.sepolia.account.address}...`
   ).start();
 
   const latestProposal = await NounsDAOLogicV2.sepolia.read.latestProposalIds([
-    wallets.sepolia.account.address,
+    config.wallets.sepolia.account.address,
   ]);
 
   spinner.update({ text: `Checking state of proposal ${latestProposal}...` });
@@ -22,7 +22,7 @@ export default async function setupTest(callback: () => Promise<void>) {
   if (latestProposalState === 1) {
     spinner.update({ text: `Canceling active proposal ${latestProposal}...` });
     const cancel = await NounsDAOLogicV2.sepolia.write.cancel([latestProposal]);
-    await clients.sepolia.waitForTransactionReceipt({
+    await config.clients.sepolia.waitForTransactionReceipt({
       hash: cancel,
     });
   }
@@ -35,7 +35,7 @@ export default async function setupTest(callback: () => Promise<void>) {
     ["0x"],
     crypto.randomBytes(20).toString("hex"),
   ]);
-  await clients.sepolia.waitForTransactionReceipt({
+  await config.clients.sepolia.waitForTransactionReceipt({
     hash: proposal,
   });
 
