@@ -87,7 +87,7 @@ export default function BotSwarm(
       );
     }
 
-    log.info(`Task ${colors.blue(id)} was sucessfully removed`);
+    log.error(`Task ${colors.blue(id)} was removed`);
 
     return true;
   }
