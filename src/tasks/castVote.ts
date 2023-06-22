@@ -4,13 +4,13 @@ import config from "../../botswarm.config";
 export default function castVote(args: {
   id: Task["id"];
   chain: Task["chain"];
-  block: Task["block"];
+  block: bigint;
   proposal: bigint;
 }): Task {
   return {
     id: args.id,
     chain: args.chain,
-    block: args.block,
+    block: Number(args.block),
     execute: async () => {
       const bid = await config.contracts.NounsPool[args.chain].read.getBid([
         args.proposal,

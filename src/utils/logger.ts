@@ -45,5 +45,10 @@ export default function logger(defaultMessage: string) {
         color: "blue",
       });
     },
+    update: (message: string) => {
+      state.update({
+        text: message,
+      });
+    },
   };
 }

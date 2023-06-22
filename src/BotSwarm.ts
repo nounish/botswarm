@@ -1,18 +1,48 @@
 import config from "../botswarm.config";
 import colors from "kleur";
 import logger from "./utils/logger";
+import fs from "fs";
+import path from "path";
 
 export type Task = {
   id: string;
   chain: keyof typeof config.clients;
-  block: bigint;
+  block: number;
   execute: () => Promise<string>;
 };
 
-export default function BotSwarm() {
-  const log = logger("Waiting for task");
+export default function BotSwarm(
+  options: { cache?: boolean } = { cache: true }
+) {
+  const log = logger("Waiting for tasks");
 
-  let tasks: Array<Task & { isExecuting: boolean }> = [];
+  let tasks: Array<Task> = [];
+  let executing: Record<string, boolean> = {};
+
+  if (options.cache) {
+    const exists = fs.existsSync(path.join(__dirname, "../cache.txt"));
+    if (exists) {
+      log.update("Loading cached tasks");
+
+      let _tasks: Array<Task> = JSON.parse(
+        fs.readFileSync(path.join(__dirname, "../cache.txt"), "utf-8")
+      );
+
+      for (const task of _tasks) {
+        log.info(
+          `Cached task ${colors.blue(
+            task.id
+          )} rescheduled for block ${colors.yellow(Number(task.block))} on ${
+            task.chain
+          }`
+        );
+      }
+
+      tasks = _tasks;
+
+      log.success("Finished syncing cached tasks");
+    }
+  }
 
   function addTask(task: Task) {
     const exists = tasks.find((task) => task.id === task.id);
@@ -21,7 +51,14 @@ export default function BotSwarm() {
       return false;
     }
 
-    tasks.push({ ...task, isExecuting: false });
+    tasks.push({ ...task });
+
+    if (options.cache) {
+      fs.writeFileSync(
+        path.join(__dirname, "../cache.txt"),
+        JSON.stringify(tasks)
+      );
+    }
 
     log.info(
       `Task ${colors.blue(task.id)} scheduled for block ${colors.yellow(
@@ -34,9 +71,23 @@ export default function BotSwarm() {
 
   function removeTask(id: string) {
     const index = tasks.findIndex((task) => task.id === id);
-    if (index !== -1) {
-      tasks.splice(index, 1);
+
+    if (index === -1) {
+      return false;
     }
+
+    tasks.splice(index, 1);
+
+    if (options.cache) {
+      fs.writeFileSync(
+        path.join(__dirname, "../cache.txt"),
+        JSON.stringify(tasks)
+      );
+    }
+
+    log.info(`Task ${colors.blue(id)} was sucessfully removed`);
+
+    return true;
   }
 
   for (const [chain, client] of Object.entries(config.clients)) {
@@ -44,11 +95,11 @@ export default function BotSwarm() {
       onBlockNumber: async (block) => {
         for (const task of tasks) {
           if (
-            !task.isExecuting &&
+            !executing[task.id] &&
             task.chain === chain &&
             task.block <= block
           ) {
-            task.isExecuting = true;
+            executing[task.id] = true;
 
             log.executing(
               `Executing task ${colors.blue(task.id)} at block ${colors.yellow(
