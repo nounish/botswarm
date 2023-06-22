@@ -1,5 +1,4 @@
 import BotSwarm from "./src/BotSwarm";
-import castVote from "./src/tasks/castVote";
 
 const { addTask, contracts } = BotSwarm();
 
@@ -16,14 +15,13 @@ NounsPool.homestead.watchEvent.BidPlaced(
             args.propId,
           ]);
 
-          addTask(
-            castVote({
-              id: `castVote:${args.propId}`,
-              chain: "homestead",
-              block: proposal.endBlock - config.castWindow,
-              proposal: args.propId,
-            })
-          );
+          addTask({
+            id: `castVote:${args.propId}`,
+            chain: "homestead",
+            block: Number(proposal.endBlock - config.castWindow),
+            execute: "castVote",
+            data: { proposal: Number(args.propId) },
+          });
         }
       }
     },

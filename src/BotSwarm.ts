@@ -3,12 +3,14 @@ import colors from "kleur";
 import logger from "./utils/logger";
 import fs from "fs";
 import path from "path";
+import execute from "./lib/tasks";
 
 export type Task = {
   id: string;
   chain: keyof typeof config.clients;
   block: number;
-  execute: () => Promise<string>;
+  execute: keyof typeof execute;
+  data?: Record<string, any>;
 };
 
 export default function BotSwarm(
@@ -108,7 +110,7 @@ export default function BotSwarm(
             );
 
             try {
-              const response = await task.execute();
+              await execute[task.execute](task);
               log.success(`Task ${colors.green(task.id)} was executed`);
             } catch (error) {
               log.error(error as string);

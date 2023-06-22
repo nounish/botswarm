@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { sepolia } from "viem/chains";
-import BotSwarm from "./BotSwarm";
+import BotSwarm, { Task } from "./BotSwarm";
 
 describe("BotSwarm", () => {
   const { tasks, addTask, removeTask } = BotSwarm({ cache: false });
 
-  const task = {
+  const task: Task = {
     id: "test:1",
     chain: sepolia.network,
     block: 0,
-    execute: async () => "",
+    execute: "doNothing",
   };
 
   it("should schedule a task", () => {

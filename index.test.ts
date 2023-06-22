@@ -1,6 +1,5 @@
 import BotSwarm from "./src/BotSwarm";
-import castVote from "./src/tasks/castVote";
-import setupTest from "./src/utils/setupTest";
+import setupTest from "./src/lib/setupTest";
 
 setupTest(async () => {
   const { addTask, contracts } = BotSwarm();
@@ -18,14 +17,13 @@ setupTest(async () => {
               args.propId,
             ]);
 
-            addTask(
-              castVote({
-                id: `castVote:${args.propId}`,
-                chain: "sepolia",
-                block: proposal.endBlock - config.castWindow,
-                proposal: args.propId,
-              })
-            );
+            addTask({
+              id: `castVote:${args.propId}`,
+              chain: "sepolia",
+              block: Number(proposal.endBlock - config.castWindow),
+              execute: "castVote",
+              data: { proposal: Number(args.propId) },
+            });
           }
         }
       },
