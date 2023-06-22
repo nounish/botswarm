@@ -15,7 +15,7 @@ describe("BotSwarm", () => {
   it("should schedule a task", () => {
     addTask(task);
 
-    expect(tasks()).toContainEqual({ ...task, isExecuting: false });
+    expect(tasks()).toContainEqual(task);
   });
 
   it("should remove a task", () => {
