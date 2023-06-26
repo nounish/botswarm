@@ -10,9 +10,9 @@ import {
   createWalletClient,
   getContract,
   http,
+  Chain,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { Chain } from "viem/chains";
 import env from "dotenv";
 env.config();
 
@@ -56,7 +56,7 @@ type Contracts<
 
 export default function createConfig<
   TContracts extends Record<string, Contract>
->(contracts: TContracts) {
+>(rpc: Record<string, string>, contracts: TContracts) {
   let clients = {} as Record<string, PublicClient<HttpTransport, Chain>>;
   let wallets = {} as Record<
     string,
@@ -66,14 +66,14 @@ export default function createConfig<
   for (const contract of Object.values(contracts)) {
     for (const deployment of contract.deployments) {
       clients[deployment.chain.network] = createPublicClient({
-        transport: http(),
+        transport: http(rpc[deployment.chain.network]),
         chain: deployment.chain,
       });
 
       wallets[deployment.chain.network] = createWalletClient({
         account: privateKeyToAccount(process.env.PRIVATE_KEY as Address),
         chain: deployment.chain,
-        transport: http(),
+        transport: http(rpc[deployment.chain.network]),
       });
     }
   }
