@@ -4,6 +4,7 @@ import logger from "./utils/logger";
 import fs from "fs";
 import path from "path";
 import execute from "./lib/tasks";
+import { createHash } from "crypto";
 
 export type Task = {
   id: string;
@@ -20,6 +21,7 @@ export default function BotSwarm(
 
   let tasks: Array<Task> = [];
   let executing: Record<string, boolean> = {};
+  let rescheduled: Record<string, boolean> = {};
 
   if (options.cache) {
     const exists = fs.existsSync(path.join(__dirname, "../cache.txt"));
@@ -46,26 +48,31 @@ export default function BotSwarm(
     }
   }
 
-  function addTask(task: Task) {
-    const exists = tasks.find((task) => task.id === task.id);
+  function addTask(params: {
+    chain: Task["chain"];
+    block: Task["block"];
+    execute: Task["execute"];
+    data?: Task["data"];
+  }) {
+    const task: Task = {
+      id: createHash("sha256").update(JSON.stringify(params)).digest("hex"),
+      ...params,
+    };
 
-    if (exists) {
+    if (tasks.find((_task) => _task.id === task.id)) {
       return false;
     }
 
-    tasks.push({ ...task });
+    tasks.push(task);
 
-    if (options.cache) {
-      fs.writeFileSync(
-        path.join(__dirname, "../cache.txt"),
-        JSON.stringify(tasks)
-      );
-    }
+    cacheTasks();
 
     log.info(
-      `Task ${colors.blue(task.id)} scheduled for block ${colors.yellow(
-        Number(task.block)
-      )} on ${task.chain}`
+      `Task ${colors.blue(
+        task.execute + ":" + task.id
+      )} scheduled for block ${colors.yellow(Number(task.block))} on ${
+        task.chain
+      }`
     );
 
     return true;
@@ -80,16 +87,20 @@ export default function BotSwarm(
 
     tasks.splice(index, 1);
 
+    cacheTasks();
+
+    log.error(`Task ${colors.blue(id)} was removed`);
+
+    return true;
+  }
+
+  function cacheTasks() {
     if (options.cache) {
       fs.writeFileSync(
         path.join(__dirname, "../cache.txt"),
         JSON.stringify(tasks)
       );
     }
-
-    log.error(`Task ${colors.blue(id)} was removed`);
-
-    return true;
   }
 
   for (const [chain, client] of Object.entries(config.clients)) {
@@ -115,6 +126,23 @@ export default function BotSwarm(
             } catch (error) {
               log.error(error as string);
               log.error(`Task ${colors.red(task.id)} failed`);
+
+              if (!rescheduled[task.id]) {
+                const rescheduledTask = {
+                  chain: task.chain,
+                  block: task.block + 100,
+                  execute: task.execute,
+                  data: task.data,
+                };
+
+                if (addTask(rescheduledTask)) {
+                  const rescheduledId = createHash("sha256")
+                    .update(JSON.stringify(rescheduledTask))
+                    .digest("hex");
+
+                  rescheduled[rescheduledId] = true;
+                }
+              }
             } finally {
               removeTask(task.id);
             }

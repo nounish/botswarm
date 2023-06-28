@@ -3,7 +3,7 @@ import config from "../../botswarm.config";
 
 export default {
   doNothing: async (task: Task) => {
-    return "Successfully did nothing";
+    return "Successfully did nothing for testing purposes";
   },
   castVote: async (task: Task) => {
     if (!task.data?.proposal) {

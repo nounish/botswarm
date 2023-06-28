@@ -18,7 +18,6 @@ setupTest(async () => {
             ]);
 
             addTask({
-              id: `castVote:${args.propId}`,
               chain: "sepolia",
               block: Number(proposal.endBlock - config.castWindow),
               execute: "castVote",

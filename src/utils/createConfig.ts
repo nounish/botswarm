@@ -54,9 +54,13 @@ type Contracts<
   };
 };
 
+const RPCs: Record<string, string> = {
+  homestead: "https://rpc.flashbots.net",
+};
+
 export default function createConfig<
   TContracts extends Record<string, Contract>
->(rpc: Record<string, string>, contracts: TContracts) {
+>(contracts: TContracts, userRPCs?: Record<string, string>) {
   let clients = {} as Record<string, PublicClient<HttpTransport, Chain>>;
   let wallets = {} as Record<
     string,
@@ -66,14 +70,22 @@ export default function createConfig<
   for (const contract of Object.values(contracts)) {
     for (const deployment of contract.deployments) {
       clients[deployment.chain.network] = createPublicClient({
-        transport: http(rpc[deployment.chain.network]),
+        transport: http(
+          userRPCs
+            ? userRPCs[deployment.chain.network]
+            : RPCs[deployment.chain.network]
+        ),
         chain: deployment.chain,
       });
 
       wallets[deployment.chain.network] = createWalletClient({
         account: privateKeyToAccount(process.env.PRIVATE_KEY as Address),
         chain: deployment.chain,
-        transport: http(rpc[deployment.chain.network]),
+        transport: http(
+          userRPCs
+            ? userRPCs[deployment.chain.network]
+            : RPCs[deployment.chain.network]
+        ),
       });
     }
   }

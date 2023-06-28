@@ -3,11 +3,7 @@ import NounsPool from "./contracts/NounsPool";
 import NounsDAOLogicV2 from "./contracts/NounsDAOLogicV2";
 import createConfig from "./src/utils/createConfig";
 
-const rpcs = {
-  homestead: "https://rpc.flashbots.net",
-};
-
-export default createConfig(rpcs, {
+export default createConfig({
   NounsPool: {
     abi: NounsPool,
     deployments: [

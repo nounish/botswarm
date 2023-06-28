@@ -16,7 +16,6 @@ NounsPool.homestead.watchEvent.BidPlaced(
           ]);
 
           addTask({
-            id: `castVote:${args.propId}`,
             chain: "homestead",
             block: Number(proposal.endBlock - config.castWindow),
             execute: "castVote",
