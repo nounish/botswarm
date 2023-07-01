@@ -1,116 +1,60 @@
 import {
   Abi,
   Address,
-  GetContractReturnType,
   HttpTransport,
   PrivateKeyAccount,
   PublicClient,
   WalletClient,
   createPublicClient,
   createWalletClient,
-  getContract,
   http,
-  Chain,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import env from "dotenv";
-env.config();
+import chains from "viem/chains";
 
-type Contract = {
+export type Chain = keyof typeof chains;
+
+export type Contract = {
   readonly abi: Abi;
-  readonly deployments: Array<{
-    readonly chain: Chain;
-    readonly address: Address;
-  }>;
-};
-
-type Clients<TContracts extends Record<string, Contract>> = {
-  [Deployment in TContracts[keyof TContracts]["deployments"][number] as Deployment["chain"]["network"]]: PublicClient<
-    HttpTransport,
-    Deployment["chain"]
-  >;
-};
-
-type Wallets<TContracts extends Record<string, Contract>> = {
-  [Deployment in TContracts[keyof TContracts]["deployments"][number] as Deployment["chain"]["network"]]: WalletClient<
-    HttpTransport,
-    Deployment["chain"],
-    PrivateKeyAccount
-  >;
-};
-
-type Contracts<
-  TContracts extends Record<string, Contract>,
-  TClients extends Clients<TContracts>,
-  TWallets extends Wallets<TContracts>
-> = {
-  [TContract in keyof TContracts]: {
-    [TDeployment in TContracts[TContract]["deployments"][number] as TDeployment["chain"]["network"]]: GetContractReturnType<
-      TContracts[TContract]["abi"],
-      TClients[TDeployment["chain"]["network"]],
-      TWallets[TDeployment["chain"]["network"]],
-      TDeployment["address"]
-    >;
+  readonly deployments: {
+    readonly [TChain in Chain]?: Address;
   };
 };
 
-const RPCs: Record<string, string> = {
-  homestead: "https://rpc.flashbots.net",
-};
+export type Client = PublicClient<HttpTransport, (typeof chains)[Chain]>;
+
+export type Wallet = WalletClient<
+  HttpTransport,
+  (typeof chains)[Chain],
+  PrivateKeyAccount
+>;
 
 export default function createConfig<
   TContracts extends Record<string, Contract>
->(contracts: TContracts, userRPCs?: Record<string, string>) {
-  let clients = {} as Record<string, PublicClient<HttpTransport, Chain>>;
-  let wallets = {} as Record<
-    string,
-    WalletClient<HttpTransport, Chain, PrivateKeyAccount>
-  >;
+>(contracts: TContracts) {
+  let clients = {} as Record<string, Client>;
+  let wallets = {} as Record<string, Wallet>;
 
-  for (const contract of Object.values(contracts)) {
-    for (const deployment of contract.deployments) {
-      clients[deployment.chain.network] = createPublicClient({
-        transport: http(
-          userRPCs
-            ? userRPCs[deployment.chain.network]
-            : RPCs[deployment.chain.network]
-        ),
-        chain: deployment.chain,
+  for (const contract in contracts) {
+    for (const deployment in contracts[contract].deployments) {
+      clients[deployment] = createPublicClient({
+        transport: http(),
+        chain: chains[deployment as Chain],
       });
 
-      wallets[deployment.chain.network] = createWalletClient({
+      if (!process.env.PRIVATE_KEY) {
+        throw new Error(
+          "PRIVATE_KEY environment variable is required to run BotSwarm, see: https://github.com/nounish/botswarm/tree/main#configuration"
+        );
+      }
+
+      wallets[deployment] = createWalletClient({
         account: privateKeyToAccount(process.env.PRIVATE_KEY as Address),
-        chain: deployment.chain,
-        transport: http(
-          userRPCs
-            ? userRPCs[deployment.chain.network]
-            : RPCs[deployment.chain.network]
-        ),
+        chain: chains[deployment as Chain],
+        transport: http(),
       });
     }
   }
 
-  let contractInstances = {} as Record<string, Record<string, unknown>>;
-
-  for (const [name, contract] of Object.entries(contracts)) {
-    contractInstances[name] = {} as Record<string, unknown>;
-    for (const deployment of contract.deployments) {
-      contractInstances[name][deployment.chain.network] = getContract({
-        address: deployment.address,
-        abi: contract.abi,
-        publicClient: clients[deployment.chain.network],
-        walletClient: wallets[deployment.chain.network],
-      });
-    }
-  }
-
-  return {
-    clients,
-    wallets,
-    contracts: contractInstances,
-  } as {
-    clients: Clients<TContracts>;
-    wallets: Wallets<TContracts>;
-    contracts: Contracts<TContracts, Clients<TContracts>, Wallets<TContracts>>;
-  };
+  return { clients, wallets, contracts };
 }

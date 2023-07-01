@@ -1,28 +1,7 @@
 import BotSwarm from "./src/BotSwarm";
+import type { Contract, Chain, Wallet, Client } from "./src/utils/createConfig";
+import type { Task } from "./src/lib/scheduler";
 
-const { addTask, contracts } = BotSwarm();
+export default BotSwarm;
 
-const { NounsPool, NounsDAOLogicV2 } = contracts;
-
-NounsPool.homestead.watchEvent.BidPlaced(
-  {},
-  {
-    onLogs: async (events) => {
-      for (const { args } of events) {
-        if (args.propId) {
-          const config = await NounsPool.homestead.read.getConfig();
-          const proposal = await NounsDAOLogicV2.homestead.read.proposals([
-            args.propId,
-          ]);
-
-          addTask({
-            chain: "homestead",
-            block: Number(proposal.endBlock - config.castWindow),
-            execute: "castVote",
-            data: { proposal: Number(args.propId) },
-          });
-        }
-      }
-    },
-  }
-);
+export type { Contract, Chain, Wallet, Client, Task };
