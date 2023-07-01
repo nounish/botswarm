@@ -2,7 +2,7 @@ import BotSwarm from "./src/BotSwarm";
 import setupTest from "./src/lib/setupTest";
 
 setupTest(async () => {
-  const { addTask, contracts } = BotSwarm();
+  const { addTask, contracts } = BotSwarm({ cache: false });
 
   const { NounsPool, NounsDAOLogicV2 } = contracts;
 
