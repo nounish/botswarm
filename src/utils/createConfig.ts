@@ -56,5 +56,5 @@ export default function createConfig<
     }
   }
 
-  return { clients, wallets, contracts };
+  return { clients, wallets };
 }

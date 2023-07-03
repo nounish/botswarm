@@ -2,7 +2,11 @@
   "name": "@nounish/botswarm",
   "version": "0.0.1",
   "description": "A typesafe cross chain MEV bot for scheduling and executing tasks at specific blocks or events.",
+  "type": "module",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
   "scripts": {
+    "build": "tsc",
     "test": "vitest src"
   },
   "dependencies": {
@@ -11,7 +15,6 @@
     "figlet": "^1.6.0",
     "kleur": "^4.1.5",
     "nanospinner": "^1.1.0",
-    "ts-node": "^10.9.1",
     "typescript": "^5.1.3",
     "viem": "^1.0.7"
   },

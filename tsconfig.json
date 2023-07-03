@@ -1,20 +1,14 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "Node 18",
-
-  "_version": "2.0.0",
-
   "compilerOptions": {
-    "lib": ["es2023"],
-    "module": "Node16",
-    "target": "es2022",
-    "resolveJsonModule": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2020",
+    "sourceMap": true,
+    "declaration": true,
+    "outDir": "dist",
     "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node"
+    "resolveJsonModule": true,
+    "rootDir": "./"
   },
-
-  "include": ["./**/*"]
+  "include": ["src/**/*.ts"]
 }

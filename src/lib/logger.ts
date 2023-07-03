@@ -1,15 +1,17 @@
 import colors from "kleur";
-import figlet from "figlet";
+import { textSync } from "figlet";
 import { description, version } from "../../package.json";
 import { createSpinner } from "nanospinner";
 
 let state = createSpinner();
 
-const defaultMessage = "Waiting for tasks...";
+const defaultMessage = "Waiting for tasks";
+
+export { colors };
 
 export function start() {
   console.log(
-    figlet.textSync("BotSwarm", {
+    textSync("BotSwarm", {
       font: "ANSI Shadow",
       horizontalLayout: "default",
       verticalLayout: "default",
@@ -21,15 +23,7 @@ export function start() {
   console.log(colors.blue(description));
   console.log(`\nVersion: ${colors.magenta(version)}\n`);
 
-  state.start({ text: "Waiting for tasks" });
-}
-
-export function info(message: string) {
-  state.warn({
-    text: message,
-    mark: "🔹",
-  });
-  state = createSpinner(defaultMessage).start();
+  state.start({ text: defaultMessage });
 }
 
 export function success(message: string) {
@@ -46,15 +40,9 @@ export function error(message: string) {
   state = createSpinner(defaultMessage).start();
 }
 
-export function executing(message: string) {
+export function active(message: string) {
   state.update({
     text: message,
     color: "blue",
-  });
-}
-
-export function update(message: string) {
-  state.update({
-    text: message,
   });
 }

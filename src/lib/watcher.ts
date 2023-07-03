@@ -1,5 +1,4 @@
-import { ValueOf } from "viem/dist/types/types/utils";
-import { Client, Contract, Chain } from "../utils/createConfig";
+import { Client, Contract, Chain } from "../utils/createConfig.js";
 import {
   ExtractAbiFunctionNames,
   ExtractAbiEventNames,
@@ -24,7 +23,7 @@ export default function watcher<TContracts extends Record<string, Contract>>(
   }
 
   function watch<
-    TContract extends ValueOf<typeof contracts>,
+    TContract extends (typeof contracts)[keyof typeof contracts],
     TChain extends keyof TContract["deployments"],
     TEventName extends ExtractAbiEventNames<TContract["abi"]>
   >(config: {
@@ -57,7 +56,7 @@ export default function watcher<TContracts extends Record<string, Contract>>(
   }
 
   async function read<
-    TContract extends ValueOf<typeof contracts>,
+    TContract extends (typeof contracts)[keyof typeof contracts],
     TChain extends keyof TContract["deployments"],
     TFunctionName extends ExtractAbiFunctionNames<
       TContract["abi"],

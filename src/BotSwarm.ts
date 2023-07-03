@@ -1,26 +1,49 @@
-import executor from "./lib/executor";
-import scheduler from "./lib/scheduler";
-import watcher from "./lib/watcher";
-import createConfig, { Contract } from "./utils/createConfig";
+import executor from "./lib/executor.js";
+import scheduler from "./lib/scheduler.js";
+import watcher from "./lib/watcher.js";
+import { start } from "./lib/logger.js";
+import createConfig, { Contract } from "./utils/createConfig.js";
 
 export default function BotSwarm<TContracts extends Record<string, Contract>>(
-  config: TContracts
+  contracts: TContracts,
+  options: { cache?: boolean; log?: boolean } = { cache: true, log: true }
 ) {
-  const { clients, wallets, contracts } = createConfig(config);
+  if (options.log) start();
 
-  const { tasks, addTask, removeTask, cacheTasks } = scheduler(contracts);
+  const { clients, wallets } = createConfig(contracts);
+
+  const {
+    tasks,
+    rescheduled,
+    addTask,
+    removeTask,
+    rescheduleTask,
+    cacheTasks,
+  } = scheduler(contracts, options);
   const { execute, executing, write } = executor(contracts, clients, wallets);
   const { onBlock, watch, read } = watcher(contracts, clients);
 
   for (const chain in clients) {
-    onBlock(chain, (chain, block) => {
+    onBlock(chain, async (chain, block) => {
       for (const task of tasks()) {
         if (
-          !executing()[task.id] &&
           task.execute.chain === chain &&
-          task.block <= block
+          task.block <= block &&
+          !executing()[task.id]
         ) {
-          execute(task);
+          const success = await execute(task);
+
+          if (success) {
+            removeTask(task.id);
+            continue;
+          }
+
+          if (rescheduled()[task.id]) {
+            removeTask(task.id);
+            continue;
+          }
+
+          rescheduleTask(task.id, task.block + 5);
         }
       }
     });
@@ -34,8 +57,10 @@ export default function BotSwarm<TContracts extends Record<string, Contract>>(
 
     // Scheduler
     tasks,
+    rescheduled,
     addTask,
     removeTask,
+    rescheduleTask,
     cacheTasks,
 
     // Executor
