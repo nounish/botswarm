@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import BotSwarm, { Task } from "./index.js";
+import BotSwarm from "./index.js";
 
 describe("BotSwarm", () => {
   const { contracts, tasks, addTask, rescheduleTask, removeTask } = BotSwarm(

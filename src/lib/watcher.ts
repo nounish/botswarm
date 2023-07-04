@@ -19,6 +19,7 @@ export default function watcher<TContracts extends Record<string, Contract>>(
   let onBlockListeners: Record<string, OnBlockCallback[]> = {};
 
   function onBlock(chain: string, callback: OnBlockCallback) {
+    if (!onBlockListeners[chain]) onBlockListeners[chain] = [];
     onBlockListeners[chain].push(callback);
   }
 

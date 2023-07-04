@@ -8,16 +8,19 @@ import {
   createPublicClient,
   createWalletClient,
   http,
+  Chain as _Chain,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import chains from "viem/chains";
+import * as chains from "viem/chains";
+import env from "dotenv";
+env.config();
 
 export type Chain = keyof typeof chains;
 
 export type Contract = {
   readonly abi: Abi;
   readonly deployments: {
-    readonly [TChain in Chain]?: Address;
+    [TChain in Chain]?: Address;
   };
 };
 
@@ -32,8 +35,8 @@ export type Wallet = WalletClient<
 export default function createConfig<
   TContracts extends Record<string, Contract>
 >(contracts: TContracts) {
-  let clients = {} as Record<string, Client>;
-  let wallets = {} as Record<string, Wallet>;
+  let clients: Record<string, Client> = {};
+  let wallets: Record<string, Wallet> = {};
 
   for (const contract in contracts) {
     for (const deployment in contracts[contract].deployments) {

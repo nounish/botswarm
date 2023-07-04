@@ -1,5 +1,5 @@
 import { join } from "path";
-import { existsSync, writeFileSync, mkdirSync } from "fs";
+import { existsSync, writeFileSync, mkdirSync, readFileSync } from "fs";
 import { createHash } from "crypto";
 import { Contract, Chain } from "../utils/createConfig.js";
 import { Address, ExtractAbiFunctionNames } from "abitype";
@@ -10,7 +10,7 @@ export type Task = {
   block: number;
   execute: {
     contract: Address;
-    chain: string;
+    chain: Chain;
     functionName: string;
   };
 };
@@ -21,6 +21,27 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
 ) {
   let tasks: Array<Task> = [];
   let rescheduled: Record<string, boolean> = {};
+
+  if (options.cache) {
+    const cache = join(process.cwd(), ".botswarm", "cache.txt");
+
+    if (existsSync(cache)) {
+      active("Loading cached tasks");
+
+      let _tasks: Array<Task> = JSON.parse(readFileSync(cache, "utf-8"));
+      tasks = _tasks;
+
+      for (const task of _tasks) {
+        success(
+          `Cached task ${colors.blue(
+            task.execute.functionName
+          )} rescheduled for block ${colors.yellow(Number(task.block))}`
+        );
+      }
+
+      success("Finished syncing cached tasks");
+    }
+  }
 
   function addTask<
     TContract extends (typeof contracts)[keyof typeof contracts],
@@ -45,11 +66,10 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
       id: createHash("sha256").update(JSON.stringify(config)).digest("hex"),
       block: config.block,
       execute: {
-        // @ts-ignore - The generic types in the function header ensure this is defined
-        contract:
-          config.execute.contract.deployments[config.execute.chain as Chain],
-        chain: config.execute.chain as string,
-        functionName: config.execute.functionName as string,
+        // @ts-ignore The generic types in the function header ensure this is defined
+        contract: config.execute.contract.deployments[config.execute.chain],
+        chain: config.execute.chain as Chain,
+        functionName: config.execute.functionName,
       },
     };
 
@@ -73,7 +93,7 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
       success(
         `Sucessfully added task: ${colors.blue(
           config.execute.functionName
-        )} for block ${colors.magenta(config.block)}`
+        )} for block ${colors.yellow(config.block)}`
       );
     }
 
@@ -124,7 +144,7 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
       success(
         `Sucessfully rescheduled task: ${colors.blue(
           tasks[index].execute.functionName
-        )} for block ${colors.magenta(block)}`
+        )} for block ${colors.yellow(block)}`
       );
     }
 

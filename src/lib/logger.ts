@@ -1,6 +1,6 @@
 import colors from "kleur";
-import { textSync } from "figlet";
-import { description, version } from "../../package.json";
+import figlet from "figlet";
+import details from "../../package.json" assert { type: "json" };
 import { createSpinner } from "nanospinner";
 
 let state = createSpinner();
@@ -11,7 +11,7 @@ export { colors };
 
 export function start() {
   console.log(
-    textSync("BotSwarm", {
+    figlet.textSync("BotSwarm", {
       font: "ANSI Shadow",
       horizontalLayout: "default",
       verticalLayout: "default",
@@ -20,8 +20,8 @@ export function start() {
     })
   );
 
-  console.log(colors.blue(description));
-  console.log(`\nVersion: ${colors.magenta(version)}\n`);
+  console.log(colors.blue(details.description));
+  console.log(`\nVersion: ${colors.magenta(details.version)}\n`);
 
   state.start({ text: defaultMessage });
 }
