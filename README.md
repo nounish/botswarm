@@ -180,7 +180,6 @@ For the most part the only functions you will need to run BotSwarm will be `addT
 ```typescript
 import BotSwarm from "@nounish/botswarm";
 import NounsPoolABI from "./contracts/NounsPool.js";
-import NounsDAOLogicV2ABI from "./contracts/NounsDAOLogicV2.js";
 
 const {
     clients, // Viem public clients for each chain
@@ -206,12 +205,6 @@ const {
     abi: NounsPoolABI,
     deployments: {
       mainnet: "0xBE5E6De0d0Ac82b087bAaA1d53F145a52EfE1642",
-    },
-  },
-  NounsDAOLogicV2: {
-    abi: NounsDAOLogicV2ABI,
-    deployments: {
-      mainnet: "0x6f3E6272A167e8AcCb32072d08E0957F9c79223d",
     },
   },
 });
