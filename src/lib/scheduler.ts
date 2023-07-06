@@ -10,6 +10,7 @@ import {
 } from "abitype";
 import { active, colors, error, success } from "./logger.js";
 import { stringify, parse } from "../utils/customSerializer.js";
+import parseTaskIdentifier from "../utils/parseTaskIdentifier.js";
 
 export type Task = {
   id: string;
@@ -69,14 +70,6 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
       args?: TArgs;
     };
   }) {
-    if (options.log) {
-      active(
-        `Adding task ${config.execute.contract as string}:${colors.blue(
-          config.execute.functionName
-        )}`
-      );
-    }
-
     const task: Task = {
       id: createHash("sha256").update(stringify(config)).digest("hex"),
       block:
@@ -89,13 +82,19 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
       },
     };
 
+    const identifier = parseTaskIdentifier(
+      task.execute.contract,
+      task.execute.functionName,
+      task.id
+    );
+
+    if (options.log) {
+      active(`Adding task ${identifier}`);
+    }
+
     if (tasks.find((_task) => _task.id === task.id)) {
       if (options.log) {
-        error(
-          `Failed to add task ${
-            config.execute.contract as string
-          }:${colors.blue(config.execute.functionName)} already exists`
-        );
+        error(`Failed to add task ${identifier} already exists`);
       }
 
       return false;
@@ -107,9 +106,7 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
 
     if (options.log) {
       success(
-        `Sucessfully added task ${
-          config.execute.contract as string
-        }:${colors.blue(config.execute.functionName)} for block ${colors.yellow(
+        `Sucessfully added task ${identifier} for block ${colors.yellow(
           Number(config.block)
         )}`
       );
@@ -122,13 +119,15 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
     const index = tasks.findIndex((task) => task.id === id);
     const task = tasks[index];
 
+    const identifier = parseTaskIdentifier(
+      task.execute.contract,
+      task.execute.functionName,
+      task.id
+    );
+
     if (index === -1) {
       if (options.log) {
-        error(
-          `Failed to remove task ${task.execute.contract}:${colors.blue(
-            task.execute.functionName
-          )} does not exist`
-        );
+        error(`Failed to remove task ${identifier} does not exist`);
       }
       return false;
     }
@@ -138,11 +137,7 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
     if (options.cache) cacheTasks();
 
     if (options.log) {
-      success(
-        `Sucessfully removed task ${task.execute.contract}:${colors.blue(
-          task.execute.functionName
-        )}`
-      );
+      success(`Sucessfully removed task ${identifier}`);
     }
 
     return true;
@@ -150,30 +145,31 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
 
   function rescheduleTask(id: string) {
     const index = tasks.findIndex((task) => task.id === id);
+    let task = tasks[index];
+
+    const identifier = parseTaskIdentifier(
+      task.execute.contract,
+      task.execute.functionName,
+      task.id
+    );
 
     if (index === -1) {
       if (options.log) {
-        error(
-          `Failed to reschedule task ${
-            tasks[index].execute.contract
-          }:${colors.blue(tasks[index].execute.functionName)} does not exist`
-        );
+        error(`Failed to reschedule task ${identifier} does not exist`);
       }
       return false;
     }
 
-    tasks[index].block += 5n;
+    task.block += 5n;
     rescheduled[id] = true;
 
     if (options.cache) cacheTasks();
 
     if (options.log) {
       success(
-        `Sucessfully rescheduled task ${
-          tasks[index].execute.contract
-        }:${colors.blue(
-          tasks[index].execute.functionName
-        )} for block ${colors.yellow(Number(tasks[index].block))}`
+        `Sucessfully rescheduled task ${identifier} for block ${colors.yellow(
+          Number(task.block)
+        )}`
       );
     }
 

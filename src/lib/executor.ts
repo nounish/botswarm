@@ -7,6 +7,7 @@ import {
 import { Chain, Contract, Wallet, Client } from "../utils/createConfig.js";
 import { Address } from "viem";
 import { active, colors, error, success } from "./logger.js";
+import parseTaskIdentifier from "../utils/parseTaskIdentifier.js";
 
 export default function executor<TContracts extends Record<string, Contract>>(
   contracts: TContracts,
@@ -16,7 +17,13 @@ export default function executor<TContracts extends Record<string, Contract>>(
   let executing: Record<string, boolean> = {};
 
   async function execute(task: Task) {
-    active(`Executing task: ${colors.blue(task.execute.functionName)}`);
+    const identifier = parseTaskIdentifier(
+      task.execute.contract,
+      task.execute.functionName,
+      task.id
+    );
+
+    active(`Executing task ${identifier}`);
 
     try {
       executing[task.id] = true;
@@ -30,7 +37,7 @@ export default function executor<TContracts extends Record<string, Contract>>(
 
       if (receipt.status === "reverted") {
         error(`
-        Task ${colors.blue(task.execute.functionName)} reverted: {
+        Task ${identifier} reverted: {
           hash: ${colors.magenta(receipt.transactionHash)},
           chain: ${colors.magenta(task.execute.chain)},
           block: ${colors.magenta(Number(receipt.blockNumber))},
@@ -44,9 +51,7 @@ export default function executor<TContracts extends Record<string, Contract>>(
         `);
       }
 
-      success(
-        `Task executed sucessfully: ${colors.blue(task.execute.functionName)}`
-      );
+      success(`Task ${identifier} executed sucessfully`);
 
       return true;
     } catch (e) {

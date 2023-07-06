@@ -210,6 +210,18 @@ const {
 });
 ```
 
+## Logging
+
+If you would like to log custom data to the terminal you can import `success`, `error`, and/or `active` which each take in a string. 
+
+```typescript
+import { sucess, error, active } from "@nounish/botswarm";
+
+success("This is a success!") // Will prepend with a green checkmark
+error("This is probably bad.") // Will prepend with a red x
+active("Doing someting") // Will change the spinner to blue
+```
+
 ## Task Id
 
 Internally, BotSwarm manages tasks by providing each task an id. The generation of this id is determined by hashing the contents of the task together to ensure no task is added twice.
