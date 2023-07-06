@@ -5,112 +5,245 @@
 ██╔══██╗██║   ██║   ██║   ╚════██║██║███╗██║██╔══██║██╔══██╗██║╚██╔╝██║
 ██████╔╝╚██████╔╝   ██║   ███████║╚███╔███╔╝██║  ██║██║  ██║██║ ╚═╝ ██║
 ╚═════╝  ╚═════╝    ╚═╝   ╚══════╝ ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝
-
-A typesafe cross chain MEV bot for scheduling and executing tasks at specific blocks or events.
 ```
 
 # Getting Started
 
-Running `npm run start` will start the bot which is defined in the `index.ts` file.
+BotSwarm is a typesafe cross chain framework for scheduling and executing transactions at specific blocks or events.
 
-A simple instance of the bot looks like this
+To get started you can either clone [our implementation of BotSwarm](https://github.com/nounish/federation-bot) or follow along with the steps below.
 
-```typescript
-import BotSwarm from "./src/BotSwarm";
+## Installation
 
-const botswarm = BotSwarm();
+Create a new NPM project and run
+
+```bash
+npm i @nounish/botswarm
 ```
 
-# Configuration
+## Configuration
 
-BotSwarm pulls all of its configuration from the `botswarm.config.ts` file which uses the createConfig method to generate Viem contract, client, and wallet instances based on the data passed into it.
+Once BotSwarm is installed you can initialize an instance by providing it with the configuration of your contracts. When passing in the ABI you must declare it as const or it won't be typesafe. BotSwarm uses [Viem](https://viem.sh/) under the hood and the deployment networks are extended from it.
 
 ```typescript
-import { mainnet, sepolia } from "viem/chains";
-import createConfig from "./src/utils/createConfig";
-import NounsPool from "./contracts/NounsPool";
-import NounsDAOLogicV2 from "./contracts/NounsDAOLogicV2";
+import BotSwarm from "@nounish/botswarm";
 
-export const { clients, wallets, contracts } = createConfig({
-  NounsPool: {
-    abi: NounsPool,
-    deployments: [
-      { chain: mainnet, address: "0xFBA3912Ca04dd458c843e2EE08967fC04f3579c2" },
-      { chain: sepolia, address: "0xd27dfb807DC3435AC3e14b55FcF1B50F96fF769a" },
-    ],
-  },
-  NounsDAOLogicV2: {
-    abi: NounsDAOLogicV2,
-    deployments: [
-      { chain: sepolia, address: "0x75D84FC49Dc8A423604BFCd46E0AB7D340D5ea38" },
-    ],
-  },
-});
+const bot = BotSwarm({
+  NounsPool: { // The contract name
+    abi: [...] as const, // The contract abi
+    deployments: {
+      mainnet: "0xA...A" // The network and address of the deployment 
+    }
+  }
+})
 ```
 
-The wallet client is created for each chain using the private key stored in `.env`
+Before BotSwarm can be run it needs a private key which is automatically loaded from `.env`.
 
 ```env
 PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 ```
 **Note:** This is not a real private key and is just used as an example
 
-# Events
+# Usage
 
-To run code on contract events, use the watchEvent method from Viem and provide the contract and event name to track.
+All of BotSwarms features can be accessed by the return value of your instance. See [Advanced Customization](#advanced-customization) for more advanced usage.
 
-In this example, "New BidPlaced event!" is logged to the console every time the BidPlaced event is emitted on the NounsPool contract that is deployed on the Sepolia network
+## Reacting to onchain events
 
-```typescript
-import BotSwarm from "./src/BotSwarm";
+To react to onchain events you can use `onBlock` or `watch`. 
 
-const { contracts } = BotSwarm();
+The `onBlock` function takes in a chain and a callback which will be called on every new block.
 
-contracts.NounsPool.sepolia.watchEvent("BidPlaced", {}, {
-    onLogs: (events) => {
-        for (const event of events) {
-             console.log("New BidPlaced event!")
-        }
+The `watch` function takes in the contract name, chain, event name, and a callback. These values are typesafe and are derived from the configuration passed into `BotSwarm()`. Once a BidPlaced event is picked up BotSwarm will run the callback. The event object returned by the `watch` callback is a Viem [Log](https://viem.sh/docs/glossary/types.html#log).
+
+```typescript 
+import BotSwarm from "@nounish/botswarm";
+import NounsPoolABI from "./contracts/NounsPool.js";
+
+const { onBlock, watch } = BotSwarm({
+  NounsPool: {
+    abi: NounsPoolABI, 
+    deployments: {
+      mainnet: "0xBE5E6De0d0Ac82b087bAaA1d53F145a52EfE1642"
     }
+  }
+});
+
+onBlock("mainnet", async (block) => {
+  console.log(`Current block: ${block}`);
+})
+
+watch({
+  contract: "NounsPool",
+  chain: "mainnet",
+  event: "BidPlaced",
+}, async (event) => {
+  console.log("A new bid was placed!");
+})
+```
+
+## Read and writing to contracts
+
+BotSwarm also returns a `read` and `write` function for abitrary contract calls. These are typesafe wrappers around Viem's `readContract` and `writeContract` functions.
+
+```typescript 
+import BotSwarm from "@nounish/botswarm";
+import NounsPoolABI from "./contracts/NounsPool.js";
+
+const { read, write } = BotSwarm({
+  NounsPool: {
+    abi: NounsPoolABI, 
+    deployments: {
+      mainnet: "0xBE5E6De0d0Ac82b087bAaA1d53F145a52EfE1642"
+    }
+  }
+});
+
+const { castWindow } = await read({
+  contract: "NounsPool",
+  chain: "mainnet",
+  functionName: "getConfig",
+});
+
+const hash = await write({
+  contract: "NounsPool",
+  chain: "mainnet",
+  functionName: "castVote",
+  args: [325]
 });
 ```
 
-# Tasks
+## Scheduling tasks
 
-Tasks can be scheduled by providing a unique `id`, the `chain` to watch, the `block` number to execute the task on, and an `execute` function which must be async and return a boolean signifying if the execution was successful or not. BotSwarm will call the execute function on the task when the block number of the chain is greater than the block specified in the task. If the execute function returns true then the task will be removed from the queue. If it returns false then it will handle the error.
+Tasks are specified contract calls to be executed after a given block. To add a task call `addTask` which takes in a block number and an `execute` object which mimics the parameters of the `write` function used above. BotSwarm will watch the specified chain and call the `write` function when the current block is >= the block passed into `addTask`. Below is an example of [our implementation](https://github.com/nounish/federation-bot) of this to cast a NounsPool vote result to NounsDAO before the proposal ends. 
 
-This example adds a task that executes 10 blocks after the block the BidPlaced event was fired on. By including the `propId` in the id of the task we can ensure that this task will only fire once per proposal as `addTask` will reject any task with an id that is already in the queue.
+If task execution fails then BotSwarm will make a second attempt and reschedule it a few blocks after. If the execution fails a second time then the task will be removed from the queue.
+
+All tasks are cached to `.botswarm/cache.txt` when added or removed. BotSwarm will load all cached tasks when restarted.
 
 ```typescript
-import BotSwarm from "./src/BotSwarm";
+import BotSwarm from "@nounish/botswarm";
+import NounsPoolABI from "./contracts/NounsPool.js";
+import NounsDAOLogicV2ABI from "./contracts/NounsDAOLogicV2.js";
 
-const { addTask, contracts } = BotSwarm();
+const { addTask, watch, read } = BotSwarm({
+  NounsPool: {
+    abi: NounsPoolABI,
+    deployments: {
+      mainnet: "0xBE5E6De0d0Ac82b087bAaA1d53F145a52EfE1642",
+    },
+  },
+  NounsDAOLogicV2: {
+    abi: NounsDAOLogicV2ABI,
+    deployments: {
+      mainnet: "0x6f3E6272A167e8AcCb32072d08E0957F9c79223d",
+    },
+  },
+});
 
-contracts.NounsPool.sepolia.watchEvent("BidPlaced", {}, {
-    onLogs: (events) => {
-        for (const { blockNumber, args } of events) {
-            addTask({
-                id: `castVote:${args.propId}`,
-                chain: sepolia.network,
-                block: blockNumber + 10n,
-                execute: async () => {
-                    console.log("Executing task")
-                    return true
-                },
-            });
-        }
-    }
+watch(
+  { contract: "NounsPool", chain: "mainnet", event: "BidPlaced" },
+  async (event) => {
+    if (!event.args.propId) return;
+
+    const { castWindow } = await read({
+      contract: "NounsPool",
+      chain: "mainnet",
+      functionName: "getConfig",
+    });
+
+    const { endBlock } = await read({
+      contract: "NounsDAOLogicV2",
+      chain: "mainnet",
+      functionName: "proposals",
+      args: [event.args.propId],
+    });
+
+    addTask({
+      block: endBlock - castWindow,
+      execute: {
+        contract: "NounsPool",
+        chain: "mainnet",
+        functionName: "castVote",
+        args: [event.args.propId],
+      },
+    });
+  }
+);
+```
+
+# Advanced Customization
+
+For the most part the only functions you will need to run BotSwarm will be `addTask`, `read`, and `watch`. However, when your situation requires more control over how tasks are added or contracts are written to, BotSwarm returns all of the functions and variables it uses internally. Below is a complete example of all of the components you can use to add advanced functionality to your bot.
+
+```typescript
+import BotSwarm from "@nounish/botswarm";
+import NounsPoolABI from "./contracts/NounsPool.js";
+import NounsDAOLogicV2ABI from "./contracts/NounsDAOLogicV2.js";
+
+const {
+    clients, // Viem public clients for each chain
+    wallets, // Viem wallet clients for each chain
+    contracts, // A readonly representation of the contracts passed into BotSwarm()
+    
+    tasks, // The current active tasks 
+    rescheduled, // Tasks that have been rescheduled
+    addTask,
+    removeTask, // Remove a task
+    rescheduleTask, // Reschedule a task
+    cacheTasks, // Cache tasks to .botswarm/cache.txt
+
+    execute, // Internal function used to execute tasks
+    executing, // Tasks that are currently executing
+    write,
+
+    onBlock,
+    watch,
+    read,
+  } = BotSwarm({
+  NounsPool: {
+    abi: NounsPoolABI,
+    deployments: {
+      mainnet: "0xBE5E6De0d0Ac82b087bAaA1d53F145a52EfE1642",
+    },
+  },
+  NounsDAOLogicV2: {
+    abi: NounsDAOLogicV2ABI,
+    deployments: {
+      mainnet: "0x6f3E6272A167e8AcCb32072d08E0957F9c79223d",
+    },
+  },
 });
 ```
 
-# Testing
+## Task Id
 
-Tests are broken up into 2 categories
+Internally, BotSwarm manages tasks by providing each task an id. The generation of this id is determined by hashing the contents of the task together to ensure no task is added twice.
 
-## npm run test
+## Usage with Viem
 
-This runs a mirrored version of `index.ts` but on the sepolia network. It includes code that automates the creation of a new proposal in NounsDAO prior to starting the bot.
+BotSwarm uses Viem under the hood but it can be used directly by referencing the contracts object.
 
-## npm run test:unit
+```typescript
+import BotSwarm from "@nounish/botswarm";
+import NounsPoolABI from "./contracts/NounsPool.js";
+import NounsDAOLogicV2ABI from "./contracts/NounsDAOLogicV2.js";
+import { getContract } from "viem";
 
-Unit tests everything in the `src` directory.
+const { contracts, clients, wallets } = BotSwarm({
+  NounsPool: {
+    abi: NounsPoolABI,
+    deployments: {
+      mainnet: "0xBE5E6De0d0Ac82b087bAaA1d53F145a52EfE1642",
+    },
+  },
+});
+
+const NounsPool = getContract({
+  address: contracts.NounsPool.deployments.mainnet.address,
+  abi: NounsPoolABI,
+  publicClient: clients.mainnet,
+  walletClient: wallets.mainnet
+})
+```

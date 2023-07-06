@@ -1,7 +1,7 @@
 {
   "name": "@nounish/botswarm",
   "version": "0.0.1",
-  "description": "A typesafe cross chain MEV bot for scheduling and executing tasks at specific blocks or events.",
+  "description": "A typesafe cross chain framework for scheduling and executing tasks at specific blocks or events.",
   "type": "module",
   "main": "src/index.js",
   "types": "src/index.d.ts",

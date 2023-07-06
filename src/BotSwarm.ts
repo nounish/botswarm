@@ -32,7 +32,7 @@ export default function BotSwarm<TContracts extends Record<string, Contract>>(
   const { onBlock, watch, read } = watcher(contracts, clients);
 
   for (const chain in clients) {
-    onBlock(chain, async (chain, block) => {
+    onBlock(chain, async (block) => {
       for (const task of tasks()) {
         if (
           task.execute.chain === chain &&

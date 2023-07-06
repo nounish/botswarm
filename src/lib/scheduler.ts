@@ -61,7 +61,7 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
       ExtractAbiFunction<TContracts[TContract]["abi"], TFunctionName>["inputs"]
     >
   >(config: {
-    block: number;
+    block: number | bigint;
     execute: {
       contract: TContract;
       chain: TChain;
@@ -79,7 +79,8 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
 
     const task: Task = {
       id: createHash("sha256").update(stringify(config)).digest("hex"),
-      block: BigInt(config.block),
+      block:
+        typeof config.block === "number" ? BigInt(config.block) : config.block,
       execute: {
         contract: config.execute.contract as string,
         chain: config.execute.chain as Chain,

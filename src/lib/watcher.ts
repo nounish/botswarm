@@ -8,7 +8,7 @@ import {
 } from "abitype";
 import { Address, Log, ReadContractReturnType } from "viem";
 
-type OnBlockCallback = (chain: string, block: bigint) => void;
+type OnBlockCallback = (block: bigint) => void;
 
 type ExtractEvent<TEvents, TName> = TEvents extends { name: TName }
   ? TEvents
@@ -105,7 +105,7 @@ export default function watcher<TContracts extends Record<string, Contract>>(
     client.watchBlockNumber({
       onBlockNumber: async (block) => {
         for (const blockListener of onBlockListeners[chain]) {
-          blockListener(chain, block);
+          blockListener(block);
         }
       },
     });
