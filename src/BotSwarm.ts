@@ -2,11 +2,19 @@ import executor from "./lib/executor.js";
 import scheduler from "./lib/scheduler.js";
 import watcher from "./lib/watcher.js";
 import { start } from "./lib/logger.js";
-import createConfig, { Contract } from "./utils/createConfig.js";
+import createConfig, {
+  Client,
+  Contract,
+  Wallet,
+} from "./utils/createConfig.js";
+import _ from "viem/node_modules/abitype";
 
 export default function BotSwarm<TContracts extends Record<string, Contract>>(
   contracts: TContracts,
-  options: { cache?: boolean; log?: boolean } = { cache: true, log: true }
+  options: {
+    cache?: boolean;
+    log?: boolean;
+  } = { cache: true, log: true }
 ) {
   if (options.log) start();
 
@@ -19,7 +27,7 @@ export default function BotSwarm<TContracts extends Record<string, Contract>>(
     removeTask,
     rescheduleTask,
     cacheTasks,
-  } = scheduler(contracts, options);
+  } = scheduler(contracts, { cache: options.cache, log: options.log });
   const { execute, executing, write } = executor(contracts, clients, wallets);
   const { onBlock, watch, read } = watcher(contracts, clients);
 
@@ -43,7 +51,7 @@ export default function BotSwarm<TContracts extends Record<string, Contract>>(
             continue;
           }
 
-          rescheduleTask(task.id, task.block + 5);
+          rescheduleTask(task.id);
         }
       }
     });

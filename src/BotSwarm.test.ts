@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import BotSwarm from "./index.js";
 
 describe("BotSwarm", () => {
-  const { contracts, tasks, addTask, rescheduleTask, removeTask } = BotSwarm(
+  const { tasks, addTask, rescheduleTask, removeTask } = BotSwarm(
     {
       TestContract: {
         abi: [
@@ -26,7 +26,7 @@ describe("BotSwarm", () => {
     const success = addTask({
       block: Infinity,
       execute: {
-        contract: contracts.TestContract,
+        contract: "TestContract",
         chain: "sepolia",
         functionName: "testFunction",
       },
@@ -37,7 +37,7 @@ describe("BotSwarm", () => {
   });
 
   it("Should reschedule a task", () => {
-    const success = rescheduleTask(tasks()[0].id, 5);
+    const success = rescheduleTask(tasks()[0].id);
 
     expect(success).toBe(true);
     expect(tasks()[0].block).toBe(5);

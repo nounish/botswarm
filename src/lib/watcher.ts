@@ -3,10 +3,12 @@ import {
   ExtractAbiFunctionNames,
   ExtractAbiEventNames,
   ExtractAbiEvents,
+  ExtractAbiFunction,
+  AbiParametersToPrimitiveTypes,
 } from "abitype";
 import { Address, Log, ReadContractReturnType } from "viem";
 
-type OnBlockCallback = (chain: string, block: number) => void;
+type OnBlockCallback = (chain: string, block: bigint) => void;
 
 type ExtractEvent<TEvents, TName> = TEvents extends { name: TName }
   ? TEvents
@@ -24,64 +26,86 @@ export default function watcher<TContracts extends Record<string, Contract>>(
   }
 
   function watch<
-    TContract extends (typeof contracts)[keyof typeof contracts],
-    TChain extends keyof TContract["deployments"],
-    TEventName extends ExtractAbiEventNames<TContract["abi"]>
-  >(config: {
-    contract: TContract;
-    chain: TChain;
-    event: TEventName;
+    TContract extends keyof TContracts,
+    TChain extends keyof TContracts[TContract]["deployments"],
+    TEventName extends ExtractAbiEventNames<TContracts[TContract]["abi"]>
+  >(
+    config: {
+      contract: TContract;
+      chain: TChain;
+      event: TEventName;
+    },
     callback: (
       log: Log<
         bigint,
         number,
-        ExtractEvent<ExtractAbiEvents<TContract["abi"]>, TEventName>,
+        ExtractEvent<
+          ExtractAbiEvents<TContracts[TContract]["abi"]>,
+          TEventName
+        >,
         undefined,
-        [ExtractEvent<ExtractAbiEvents<TContract["abi"]>, TEventName>]
+        [
+          ExtractEvent<
+            ExtractAbiEvents<TContracts[TContract]["abi"]>,
+            TEventName
+          >
+        ]
       >
-    ) => void;
-  }) {
+    ) => void
+  ) {
     const client = clients[config.chain as string];
+    const { deployments, abi } = contracts[config.contract];
 
     client.watchEvent({
-      address: config.contract.deployments[config.chain as Chain] as Address,
-      event: config.contract.abi.find(
+      address: deployments[config.chain as Chain] as Address,
+      event: abi.find(
         (item) => item.type === "event" && item.name === config.event
-      ) as ExtractEvent<ExtractAbiEvents<TContract["abi"]>, TEventName>,
+      ) as ExtractEvent<
+        ExtractAbiEvents<TContracts[TContract]["abi"]>,
+        TEventName
+      >,
       onLogs: (logs) => {
         for (const log of logs) {
-          config.callback(log);
+          callback(log);
         }
       },
     });
   }
 
   async function read<
-    TContract extends (typeof contracts)[keyof typeof contracts],
-    TChain extends keyof TContract["deployments"],
+    TContract extends keyof TContracts,
+    TChain extends keyof TContracts[TContract]["deployments"],
     TFunctionName extends ExtractAbiFunctionNames<
-      TContract["abi"],
+      TContracts[TContract]["abi"],
       "view" | "pure"
+    >,
+    TArgs extends AbiParametersToPrimitiveTypes<
+      ExtractAbiFunction<TContracts[TContract]["abi"], TFunctionName>["inputs"]
     >
   >(config: {
     contract: TContract;
     chain: TChain;
     functionName: TFunctionName;
+    args?: TArgs;
   }) {
     const client = clients[config.chain as string];
+    const { deployments, abi } = contracts[config.contract];
 
     return client.readContract({
-      address: config.contract.deployments[config.chain as Chain] as Address,
-      abi: config.contract.abi,
+      address: deployments[config.chain as Chain] as Address,
+      abi,
       functionName: config.functionName as string,
-    }) as Promise<ReadContractReturnType<TContract["abi"], TFunctionName>>;
+      args: config.args as any,
+    }) as Promise<
+      ReadContractReturnType<TContracts[TContract]["abi"], TFunctionName>
+    >;
   }
 
   for (const [chain, client] of Object.entries(clients)) {
     client.watchBlockNumber({
       onBlockNumber: async (block) => {
         for (const blockListener of onBlockListeners[chain]) {
-          blockListener(chain, Number(block));
+          blockListener(chain, block);
         }
       },
     });

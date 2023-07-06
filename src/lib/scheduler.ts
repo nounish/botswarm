@@ -2,16 +2,23 @@ import { join } from "path";
 import { existsSync, writeFileSync, mkdirSync, readFileSync } from "fs";
 import { createHash } from "crypto";
 import { Contract, Chain } from "../utils/createConfig.js";
-import { Address, ExtractAbiFunctionNames } from "abitype";
+import {
+  AbiParametersToPrimitiveTypes,
+  Address,
+  ExtractAbiFunction,
+  ExtractAbiFunctionNames,
+} from "abitype";
 import { active, colors, error, success } from "./logger.js";
+import { stringify, parse } from "../utils/customSerializer.js";
 
 export type Task = {
   id: string;
-  block: number;
+  block: bigint;
   execute: {
-    contract: Address;
+    contract: string;
     chain: Chain;
     functionName: string;
+    args: any[];
   };
 };
 
@@ -28,7 +35,7 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
     if (existsSync(cache)) {
       active("Loading cached tasks");
 
-      let _tasks: Array<Task> = JSON.parse(readFileSync(cache, "utf-8"));
+      let _tasks: Array<Task> = parse(readFileSync(cache, "utf-8"));
       tasks = _tasks;
 
       for (const task of _tasks) {
@@ -44,11 +51,14 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
   }
 
   function addTask<
-    TContract extends (typeof contracts)[keyof typeof contracts],
-    TChain extends keyof TContract["deployments"],
+    TContract extends keyof TContracts,
+    TChain extends keyof TContracts[TContract]["deployments"],
     TFunctionName extends ExtractAbiFunctionNames<
-      TContract["abi"],
+      TContracts[TContract]["abi"],
       "payable" | "nonpayable"
+    >,
+    TArgs extends AbiParametersToPrimitiveTypes<
+      ExtractAbiFunction<TContracts[TContract]["abi"], TFunctionName>["inputs"]
     >
   >(config: {
     block: number;
@@ -56,29 +66,34 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
       contract: TContract;
       chain: TChain;
       functionName: TFunctionName;
+      args?: TArgs;
     };
   }) {
     if (options.log) {
-      active(`Adding task: ${colors.blue(config.execute.functionName)}`);
+      active(
+        `Adding task ${config.execute.contract as string}:${colors.blue(
+          config.execute.functionName
+        )}`
+      );
     }
 
     const task: Task = {
-      id: createHash("sha256").update(JSON.stringify(config)).digest("hex"),
-      block: config.block,
+      id: createHash("sha256").update(stringify(config)).digest("hex"),
+      block: BigInt(config.block),
       execute: {
-        // @ts-ignore The generic types in the function header ensure this is defined
-        contract: config.execute.contract.deployments[config.execute.chain],
+        contract: config.execute.contract as string,
         chain: config.execute.chain as Chain,
         functionName: config.execute.functionName,
+        args: config.execute.args as any,
       },
     };
 
     if (tasks.find((_task) => _task.id === task.id)) {
       if (options.log) {
         error(
-          `Failed to add task: ${colors.blue(
-            config.execute.functionName
-          )} already exists`
+          `Failed to add task ${
+            config.execute.contract as string
+          }:${colors.blue(config.execute.functionName)} already exists`
         );
       }
 
@@ -91,9 +106,11 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
 
     if (options.log) {
       success(
-        `Sucessfully added task: ${colors.blue(
-          config.execute.functionName
-        )} for block ${colors.yellow(config.block)}`
+        `Sucessfully added task ${
+          config.execute.contract as string
+        }:${colors.blue(config.execute.functionName)} for block ${colors.yellow(
+          Number(config.block)
+        )}`
       );
     }
 
@@ -102,10 +119,15 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
 
   function removeTask(id: string) {
     const index = tasks.findIndex((task) => task.id === id);
+    const task = tasks[index];
 
     if (index === -1) {
       if (options.log) {
-        error(`Failed to remove task: ${colors.blue(id)} does not exist`);
+        error(
+          `Failed to remove task ${task.execute.contract}:${colors.blue(
+            task.execute.functionName
+          )} does not exist`
+        );
       }
       return false;
     }
@@ -116,8 +138,8 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
 
     if (options.log) {
       success(
-        `Sucessfully removed task: ${colors.blue(
-          tasks[index].execute.functionName
+        `Sucessfully removed task ${task.execute.contract}:${colors.blue(
+          task.execute.functionName
         )}`
       );
     }
@@ -125,26 +147,32 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
     return true;
   }
 
-  function rescheduleTask(id: string, block: number) {
+  function rescheduleTask(id: string) {
     const index = tasks.findIndex((task) => task.id === id);
 
     if (index === -1) {
       if (options.log) {
-        error(`Failed to reschedule task: ${colors.blue(id)} does not exist`);
+        error(
+          `Failed to reschedule task ${
+            tasks[index].execute.contract
+          }:${colors.blue(tasks[index].execute.functionName)} does not exist`
+        );
       }
       return false;
     }
 
-    tasks[index].block = block;
+    tasks[index].block += 5n;
     rescheduled[id] = true;
 
     if (options.cache) cacheTasks();
 
     if (options.log) {
       success(
-        `Sucessfully rescheduled task: ${colors.blue(
+        `Sucessfully rescheduled task ${
+          tasks[index].execute.contract
+        }:${colors.blue(
           tasks[index].execute.functionName
-        )} for block ${colors.yellow(block)}`
+        )} for block ${colors.yellow(Number(tasks[index].block))}`
       );
     }
 
@@ -158,7 +186,7 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
       mkdirSync(directory, { recursive: true });
     }
 
-    writeFileSync(join(directory, "cache.txt"), JSON.stringify(tasks));
+    writeFileSync(join(directory, "cache.txt"), stringify(tasks));
   }
 
   return {

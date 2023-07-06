@@ -9,7 +9,8 @@
 
     "strict": true,
 
-    // "declaration": true,
+    "skipLibCheck": true,
+    "declaration": true,
 
     "outDir": "dist",
     "rootDir": "./"

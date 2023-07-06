@@ -1,5 +1,9 @@
 import { Task } from "./scheduler.js";
-import { ExtractAbiFunctionNames } from "abitype";
+import {
+  AbiParametersToPrimitiveTypes,
+  ExtractAbiFunction,
+  ExtractAbiFunctionNames,
+} from "abitype";
 import { Chain, Contract, Wallet, Client } from "../utils/createConfig.js";
 import { Address } from "viem";
 import { active, colors, error, success } from "./logger.js";
@@ -16,6 +20,7 @@ export default function executor<TContracts extends Record<string, Contract>>(
 
     try {
       executing[task.id] = true;
+
       // @ts-ignore
       const hash = await write(task.execute);
 
@@ -29,7 +34,11 @@ export default function executor<TContracts extends Record<string, Contract>>(
           hash: ${colors.magenta(receipt.transactionHash)},
           chain: ${colors.magenta(task.execute.chain)},
           block: ${colors.magenta(Number(receipt.blockNumber))},
-          contract: ${colors.magenta(task.execute.contract)},
+          contract: ${colors.magenta(
+            contracts[task.execute.contract].deployments[
+              task.execute.chain
+            ] as string
+          )},
           function: ${colors.magenta(task.execute.functionName)},
         }        
         `);
@@ -50,26 +59,42 @@ export default function executor<TContracts extends Record<string, Contract>>(
   }
 
   async function write<
-    TContract extends (typeof contracts)[keyof typeof contracts],
-    TChain extends keyof TContract["deployments"],
+    TContract extends keyof TContracts,
+    TChain extends keyof TContracts[TContract]["deployments"],
     TFunctionName extends ExtractAbiFunctionNames<
-      TContract["abi"],
+      TContracts[TContract]["abi"],
       "payable" | "nonpayable"
+    >,
+    TArgs extends AbiParametersToPrimitiveTypes<
+      ExtractAbiFunction<TContracts[TContract]["abi"], TFunctionName>["inputs"]
     >
   >(config: {
     contract: TContract;
     chain: TChain;
     functionName: TFunctionName;
+    args?: TArgs;
   }) {
     const client = clients[config.chain as string];
     const wallet = wallets[config.chain as string];
 
+    const { deployments, abi } = contracts[config.contract];
+
+    const { baseFeePerGas } = await client.getBlock();
+
+    if (!baseFeePerGas) {
+      throw new Error("Failed to retrieve base fee from block");
+    }
+
+    const priorityFee = baseFeePerGas / 2n;
+
     const { request } = await client.simulateContract({
       account: wallet.account,
-      address: config.contract.deployments[config.chain as Chain] as Address,
-      abi: config.contract.abi,
+      address: deployments[config.chain as Chain] as Address,
+      abi,
       functionName: config.functionName as string,
-      maxPriorityFeePerGas: (await client.getGasPrice()) / 2n,
+      args: config.args as any,
+      maxPriorityFeePerGas: priorityFee,
+      maxFeePerGas: baseFeePerGas + priorityFee,
     });
 
     return wallet.writeContract(request);

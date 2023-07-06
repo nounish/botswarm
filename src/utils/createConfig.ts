@@ -12,6 +12,7 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import * as chains from "viem/chains";
+import _ from "viem/node_modules/abitype";
 import env from "dotenv";
 env.config();
 
