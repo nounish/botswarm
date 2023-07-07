@@ -63,22 +63,21 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
     >
   >(config: {
     block: number | bigint;
-    execute: {
-      contract: TContract;
-      chain: TChain;
-      functionName: TFunctionName;
-      args?: TArgs;
-    };
+
+    contract: TContract;
+    chain: TChain;
+    functionName: TFunctionName;
+    args?: TArgs;
   }) {
     const task: Task = {
       id: createHash("sha256").update(stringify(config)).digest("hex"),
       block:
         typeof config.block === "number" ? BigInt(config.block) : config.block,
       execute: {
-        contract: config.execute.contract as string,
-        chain: config.execute.chain as Chain,
-        functionName: config.execute.functionName,
-        args: config.execute.args as any,
+        contract: config.contract as string,
+        chain: config.chain as Chain,
+        functionName: config.functionName,
+        args: config.args as any,
       },
     };
 

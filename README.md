@@ -136,7 +136,7 @@ const hash = await write({
 
 ## Scheduling tasks
 
-Tasks are specified contract calls to be executed after a given block. To add a task call `addTask` which takes in a block number and an `execute` object which mimics the parameters of the `write` function used above. BotSwarm will watch the specified chain and call the `write` function when the current block is >= the block passed into `addTask`. Below is an example of [our implementation](https://github.com/nounish/federation-bot) of this to cast a NounsPool vote result to NounsDAO before the proposal ends. 
+Tasks are specified contract calls to be executed after a given block. To add a task call `addTask` which takes in a block number contract call details which mimic the parameters of the `write` function used above. BotSwarm will watch the specified chain and call the `write` function when the current block is >= the block passed into `addTask`. Below is an example of [our implementation](https://github.com/nounish/federation-bot) of this to cast a NounsPool vote result to NounsDAO before the proposal ends. 
 
 If task execution fails then BotSwarm will make a second attempt and reschedule it a few blocks after. If the execution fails a second time then the task will be removed from the queue.
 
@@ -182,12 +182,10 @@ watch(
 
     addTask({
       block: endBlock - castWindow,
-      execute: {
-        contract: "NounsPool",
-        chain: "mainnet",
-        functionName: "castVote",
-        args: [event.args.propId],
-      },
+      contract: "NounsPool",
+      chain: "mainnet",
+      functionName: "castVote",
+      args: [event.args.propId],
     });
   }
 );

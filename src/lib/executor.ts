@@ -17,23 +17,37 @@ export default function executor<TContracts extends Record<string, Contract>>(
   let executing: Record<string, boolean> = {};
 
   async function execute(task: Task) {
-    const identifier = parseTaskIdentifier(
-      task.execute.contract,
-      task.execute.functionName,
-      task.id
-    );
-
-    active(`Executing task ${identifier}`);
-
     try {
       executing[task.id] = true;
 
-      // @ts-ignore
-      const hash = await write(task.execute);
+      const identifier = parseTaskIdentifier(
+        task.execute.contract,
+        task.execute.functionName,
+        task.id
+      );
 
-      const receipt = await clients[
-        task.execute.chain
-      ].waitForTransactionReceipt({ hash });
+      active(`Executing task ${identifier}`);
+
+      const client = clients[task.execute.chain];
+
+      const { baseFeePerGas } = await client.getBlock();
+
+      if (!baseFeePerGas) {
+        throw new Error("Failed to retrieve base fee from block");
+      }
+
+      const priorityFee = baseFeePerGas / 2n;
+
+      const hash = await write({
+        contract: task.execute.contract,
+        chain: task.execute.chain,
+        functionName: task.execute.functionName,
+        args: task.execute.args as any,
+        maxPriorityFeePerGas: priorityFee,
+        maxFeePerGas: baseFeePerGas + priorityFee,
+      });
+
+      const receipt = await client.waitForTransactionReceipt({ hash });
 
       if (receipt.status === "reverted") {
         error(`
@@ -78,31 +92,29 @@ export default function executor<TContracts extends Record<string, Contract>>(
     chain: TChain;
     functionName: TFunctionName;
     args?: TArgs;
+    maxPriorityFeePerGas?: bigint;
+    maxFeePerGas?: bigint;
   }) {
-    const client = clients[config.chain as string];
-    const wallet = wallets[config.chain as string];
+    try {
+      const client = clients[config.chain as string];
+      const wallet = wallets[config.chain as string];
 
-    const { deployments, abi } = contracts[config.contract];
+      const { deployments, abi } = contracts[config.contract];
 
-    const { baseFeePerGas } = await client.getBlock();
+      const { request } = await client.simulateContract({
+        account: wallet.account,
+        address: deployments[config.chain as Chain] as Address,
+        abi,
+        functionName: config.functionName as string,
+        args: config.args as any,
+        maxPriorityFeePerGas: config.maxPriorityFeePerGas,
+        maxFeePerGas: config.maxFeePerGas,
+      });
 
-    if (!baseFeePerGas) {
-      throw new Error("Failed to retrieve base fee from block");
+      return wallet.writeContract(request);
+    } catch (e) {
+      error(e as string);
     }
-
-    const priorityFee = baseFeePerGas / 2n;
-
-    const { request } = await client.simulateContract({
-      account: wallet.account,
-      address: deployments[config.chain as Chain] as Address,
-      abi,
-      functionName: config.functionName as string,
-      args: config.args as any,
-      maxPriorityFeePerGas: priorityFee,
-      maxFeePerGas: baseFeePerGas + priorityFee,
-    });
-
-    return wallet.writeContract(request);
   }
 
   return {
