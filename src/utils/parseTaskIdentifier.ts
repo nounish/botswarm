@@ -5,7 +5,7 @@ export default function parseTaskIdentifier(
   functionName: string,
   id: string
 ) {
-  return `${contract}:${colors.blue(functionName)}:${colors.magenta(
-    id.substring(0, 5)
-  )}`;
+  return `${colors.green(contract)}:${colors.blue(
+    functionName
+  )}:${colors.magenta(id.substring(0, 5))}`;
 }
