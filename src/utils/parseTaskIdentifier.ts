@@ -1,4 +1,4 @@
-import { colors } from "../lib/logger";
+import { colors } from "../lib/logger.js";
 
 export default function parseTaskIdentifier(
   contract: string,

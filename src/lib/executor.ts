@@ -47,6 +47,10 @@ export default function executor<TContracts extends Record<string, Contract>>(
         maxFeePerGas: baseFeePerGas + priorityFee,
       });
 
+      if (!hash) {
+        throw new Error("Failed to execute task");
+      }
+
       const receipt = await client.waitForTransactionReceipt({ hash });
 
       if (receipt.status === "reverted") {
