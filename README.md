@@ -45,6 +45,26 @@ PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 ```
 **Note:** This is not a real private key and is just used as an example
 
+### Options
+
+There are 3 optional properties you can configure with BotSwarm and their default values are shown below.
+
+```typescript
+import BotSwarm from "@nounish/botswarm";
+
+const bot = BotSwarm(
+  {...}, 
+  // These are the default values that can be overidden
+  {
+    logs: true, // Log updates to the console
+    cache: true, // Cache tasks to .botswarm/cache.txt
+    rps: { // Override public rpcs for clients and wallets
+      mainnet: "https://rpc.flashbots.net",
+    }
+  }
+);
+```
+
 # Usage
 
 All of BotSwarms features can be accessed by the return value of your instance. See [Advanced Customization](#advanced-customization) for more advanced usage.

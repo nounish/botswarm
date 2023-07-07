@@ -2,11 +2,7 @@ import executor from "./lib/executor.js";
 import scheduler from "./lib/scheduler.js";
 import watcher from "./lib/watcher.js";
 import { start } from "./lib/logger.js";
-import createConfig, {
-  Client,
-  Contract,
-  Wallet,
-} from "./utils/createConfig.js";
+import createConfig, { RPCs, Contract } from "./utils/createConfig.js";
 import _ from "viem/node_modules/abitype";
 
 export default function BotSwarm<TContracts extends Record<string, Contract>>(
@@ -14,11 +10,20 @@ export default function BotSwarm<TContracts extends Record<string, Contract>>(
   options: {
     cache?: boolean;
     log?: boolean;
-  } = { cache: true, log: true }
+    rpcs?: RPCs;
+  } = {
+    cache: true,
+    log: true,
+  }
 ) {
   if (options.log) start();
 
-  const { clients, wallets } = createConfig(contracts);
+  const { clients, wallets } = createConfig(
+    contracts,
+    options.rpcs ?? {
+      mainnet: "https://rpc.flashbots.net/",
+    }
+  );
 
   const {
     tasks,

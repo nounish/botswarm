@@ -33,16 +33,18 @@ export type Wallet = WalletClient<
   PrivateKeyAccount
 >;
 
+export type RPCs = { [TChain in Chain]?: string };
+
 export default function createConfig<
   TContracts extends Record<string, Contract>
->(contracts: TContracts) {
+>(contracts: TContracts, rpcs: RPCs) {
   let clients: Record<string, Client> = {};
   let wallets: Record<string, Wallet> = {};
 
   for (const contract in contracts) {
     for (const deployment in contracts[contract].deployments) {
       clients[deployment] = createPublicClient({
-        transport: http(),
+        transport: http(rpcs[deployment as Chain]),
         chain: chains[deployment as Chain],
       });
 
@@ -55,7 +57,7 @@ export default function createConfig<
       wallets[deployment] = createWalletClient({
         account: privateKeyToAccount(process.env.PRIVATE_KEY as Address),
         chain: chains[deployment as Chain],
-        transport: http(),
+        transport: http(rpcs[deployment as Chain]),
       });
     }
   }
