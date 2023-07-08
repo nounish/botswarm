@@ -63,7 +63,6 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
     >
   >(config: {
     block: number | bigint;
-
     contract: TContract;
     chain: TChain;
     functionName: TFunctionName;
