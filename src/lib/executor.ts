@@ -106,14 +106,6 @@ export default function executor<TContracts extends Record<string, Contract>>(
 
       const { deployments, abi } = contracts[config.contract];
 
-      const gas = await client.estimateContractGas({
-        address: deployments[config.chain as Chain] as Address,
-        abi,
-        functionName: config.functionName as string,
-        args: config.args as any,
-        account: wallet.account,
-      });
-
       const { request } = await client.simulateContract({
         account: wallet.account,
         address: deployments[config.chain as Chain] as Address,
@@ -122,7 +114,15 @@ export default function executor<TContracts extends Record<string, Contract>>(
         args: config.args as any,
         maxPriorityFeePerGas: config.maxPriorityFeePerGas,
         maxFeePerGas: config.maxFeePerGas,
-        gas: config.gasLimit ?? gas,
+        gas:
+          config.gasLimit ??
+          (await client.estimateContractGas({
+            address: deployments[config.chain as Chain] as Address,
+            abi,
+            functionName: config.functionName as string,
+            args: config.args as any,
+            account: wallet.account,
+          })),
       });
 
       return wallet.writeContract(request);
