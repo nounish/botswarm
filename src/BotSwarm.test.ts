@@ -24,28 +24,23 @@ describe("BotSwarm", () => {
 
   it("Should schedule a task", () => {
     const success = addTask({
-      block: Infinity,
-      execute: {
-        contract: "TestContract",
-        chain: "sepolia",
-        functionName: "testFunction",
-      },
+      block: 99999999999999999999n,
+      contract: "TestContract",
+      chain: "sepolia",
+      functionName: "testFunction",
     });
-
     expect(success).toBe(true);
     expect(tasks().length).toBe(1);
   });
 
   it("Should reschedule a task", () => {
     const success = rescheduleTask(tasks()[0].id);
-
     expect(success).toBe(true);
-    expect(tasks()[0].block).toBe(5);
+    expect(tasks()[0].block).toBe(99999999999999999999n + 5n);
   });
 
   it("Should remove a task", () => {
     const success = removeTask(tasks()[0].id);
-
     expect(success).toBe(true);
     expect(tasks().length).toBe(0);
   });
