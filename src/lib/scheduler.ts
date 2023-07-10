@@ -19,7 +19,8 @@ export type Task = {
   chain: Chain;
   functionName: string;
   args: any[];
-  priority: boolean;
+  priorityFee: number;
+  maxBaseFeeForPriority: number;
 };
 
 export default function scheduler<TContracts extends Record<string, Contract>>(
@@ -67,7 +68,8 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
     chain: TChain;
     functionName: TFunctionName;
     args?: TArgs;
-    priority?: boolean;
+    priorityFee?: number;
+    maxBaseFeeForPriority?: number;
   }) {
     const task: Task = {
       id: createHash("sha256").update(stringify(config)).digest("hex"),
@@ -77,7 +79,8 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
       chain: config.chain as Chain,
       functionName: config.functionName,
       args: config.args as any,
-      priority: config.priority ?? false,
+      priorityFee: config.priorityFee ?? 0,
+      maxBaseFeeForPriority: config.maxBaseFeeForPriority ?? 0,
     };
 
     const identifier = parseTaskIdentifier(task);

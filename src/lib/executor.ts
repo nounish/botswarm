@@ -5,7 +5,12 @@ import {
   ExtractAbiFunctionNames,
 } from "abitype";
 import { Chain, Contract, Wallet, Client } from "../utils/createConfig.js";
-import { Address, BaseError, ContractFunctionRevertedError } from "viem";
+import {
+  Address,
+  BaseError,
+  ContractFunctionRevertedError,
+  parseGwei,
+} from "viem";
 import { active, colors, error, success } from "./logger.js";
 import parseTaskIdentifier from "../utils/parseTaskIdentifier.js";
 
@@ -13,7 +18,7 @@ export default function executor<TContracts extends Record<string, Contract>>(
   contracts: TContracts,
   clients: Record<string, Client>,
   wallets: Record<string, Wallet>,
-  options: { gasLimitBuffer: number; priorityMultiplier: number }
+  options: { gasLimitBuffer: number }
 ) {
   let executing: Record<string, boolean> = {};
 
@@ -33,9 +38,12 @@ export default function executor<TContracts extends Record<string, Contract>>(
         throw new Error("Failed to retrieve base fee from block");
       }
 
-      const priorityFee = task.priority
-        ? baseFeePerGas * BigInt(options.priorityMultiplier)
-        : 0n;
+      const priorityFee =
+        task.maxBaseFeeForPriority === 0
+          ? parseGwei(`${task.priorityFee}`)
+          : baseFeePerGas > task.maxBaseFeeForPriority
+          ? 0n
+          : parseGwei(`${task.priorityFee}`);
 
       const hash = await write({
         contract: task.contract,
