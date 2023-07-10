@@ -5,14 +5,15 @@ import {
   ExtractAbiFunctionNames,
 } from "abitype";
 import { Chain, Contract, Wallet, Client } from "../utils/createConfig.js";
-import { Address } from "viem";
+import { Address, BaseError, ContractFunctionRevertedError } from "viem";
 import { active, colors, error, success } from "./logger.js";
 import parseTaskIdentifier from "../utils/parseTaskIdentifier.js";
 
 export default function executor<TContracts extends Record<string, Contract>>(
   contracts: TContracts,
   clients: Record<string, Client>,
-  wallets: Record<string, Wallet>
+  wallets: Record<string, Wallet>,
+  options: { gasLimitBuffer: number; priorityMultiplier: number }
 ) {
   let executing: Record<string, boolean> = {};
 
@@ -20,15 +21,11 @@ export default function executor<TContracts extends Record<string, Contract>>(
     try {
       executing[task.id] = true;
 
-      const identifier = parseTaskIdentifier(
-        task.execute.contract,
-        task.execute.functionName,
-        task.id
-      );
+      const identifier = parseTaskIdentifier(task);
 
       active(`Executing task ${identifier}`);
 
-      const client = clients[task.execute.chain];
+      const client = clients[task.chain];
 
       const { baseFeePerGas } = await client.getBlock();
 
@@ -36,13 +33,15 @@ export default function executor<TContracts extends Record<string, Contract>>(
         throw new Error("Failed to retrieve base fee from block");
       }
 
-      const priorityFee = baseFeePerGas / 2n;
+      const priorityFee = task.priority
+        ? baseFeePerGas * BigInt(options.priorityMultiplier)
+        : 0n;
 
       const hash = await write({
-        contract: task.execute.contract,
-        chain: task.execute.chain,
-        functionName: task.execute.functionName,
-        args: task.execute.args as any,
+        contract: task.contract,
+        chain: task.chain,
+        functionName: task.functionName,
+        args: task.args as any,
         maxPriorityFeePerGas: priorityFee,
         maxFeePerGas: baseFeePerGas + priorityFee,
       });
@@ -57,14 +56,12 @@ export default function executor<TContracts extends Record<string, Contract>>(
         error(`
         Task ${identifier} reverted: {
           hash: ${colors.magenta(receipt.transactionHash)},
-          chain: ${colors.magenta(task.execute.chain)},
+          chain: ${colors.magenta(task.chain)},
           block: ${colors.magenta(Number(receipt.blockNumber))},
           contract: ${colors.magenta(
-            contracts[task.execute.contract].deployments[
-              task.execute.chain
-            ] as string
+            contracts[task.contract].deployments[task.chain] as string
           )},
-          function: ${colors.magenta(task.execute.functionName)},
+          function: ${colors.magenta(task.functionName)},
         }        
         `);
       }
@@ -106,6 +103,18 @@ export default function executor<TContracts extends Record<string, Contract>>(
 
       const { deployments, abi } = contracts[config.contract];
 
+      const gasLimit =
+        config.gasLimit ??
+        (await client.estimateContractGas({
+          address: deployments[config.chain as Chain] as Address,
+          abi,
+          functionName: config.functionName as string,
+          args: config.args as any,
+          maxPriorityFeePerGas: config.maxPriorityFeePerGas,
+          maxFeePerGas: config.maxFeePerGas,
+          account: wallet.account,
+        }));
+
       const { request } = await client.simulateContract({
         account: wallet.account,
         address: deployments[config.chain as Chain] as Address,
@@ -114,20 +123,17 @@ export default function executor<TContracts extends Record<string, Contract>>(
         args: config.args as any,
         maxPriorityFeePerGas: config.maxPriorityFeePerGas,
         maxFeePerGas: config.maxFeePerGas,
-        gas:
-          config.gasLimit ??
-          (await client.estimateContractGas({
-            address: deployments[config.chain as Chain] as Address,
-            abi,
-            functionName: config.functionName as string,
-            args: config.args as any,
-            account: wallet.account,
-          })),
+        gas: gasLimit + BigInt(options.gasLimitBuffer),
       });
 
       return wallet.writeContract(request);
     } catch (e) {
-      error(e as string);
+      if (
+        e instanceof BaseError &&
+        e.cause instanceof ContractFunctionRevertedError
+      ) {
+        error(`${e.cause.data?.errorName}: ${e.cause.message}`);
+      } else error(e as string);
     }
   }
 

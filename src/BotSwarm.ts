@@ -7,23 +7,30 @@ import _ from "viem/node_modules/abitype";
 
 export default function BotSwarm<TContracts extends Record<string, Contract>>(
   contracts: TContracts,
-  options: {
+  config?: {
     cache?: boolean;
     log?: boolean;
     rpcs?: RPCs;
-  } = {
-    cache: true,
-    log: true,
+    gasLimitBuffer?: number;
+    blockExecutionBuffer?: number;
+    priorityMultiplier?: number;
   }
 ) {
+  const options = {
+    cache: true,
+    log: true,
+    rpcs: {
+      mainnet: "https://rpc.flashbots.net/",
+    },
+    gasLimitBuffer: 30000,
+    blockExecutionBuffer: 0,
+    priorityMultiplier: 1,
+    ...config,
+  };
+
   if (options.log) start();
 
-  const { clients, wallets } = createConfig(
-    contracts,
-    options.rpcs ?? {
-      mainnet: "https://rpc.flashbots.net/",
-    }
-  );
+  const { clients, wallets } = createConfig(contracts, options.rpcs);
 
   const {
     tasks,
@@ -33,15 +40,18 @@ export default function BotSwarm<TContracts extends Record<string, Contract>>(
     rescheduleTask,
     cacheTasks,
   } = scheduler(contracts, { cache: options.cache, log: options.log });
-  const { execute, executing, write } = executor(contracts, clients, wallets);
+  const { execute, executing, write } = executor(contracts, clients, wallets, {
+    gasLimitBuffer: options.gasLimitBuffer,
+    priorityMultiplier: options.priorityMultiplier,
+  });
   const { onBlock, watch, read } = watcher(contracts, clients);
 
   for (const chain in clients) {
     onBlock(chain, async (block) => {
       for (const task of tasks()) {
         if (
-          task.execute.chain === chain &&
-          task.block <= block &&
+          task.chain === chain &&
+          task.block <= block + BigInt(options.blockExecutionBuffer) &&
           !executing()[task.id]
         ) {
           const success = await execute(task);

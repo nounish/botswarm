@@ -15,17 +15,16 @@ import parseTaskIdentifier from "../utils/parseTaskIdentifier.js";
 export type Task = {
   id: string;
   block: bigint;
-  execute: {
-    contract: string;
-    chain: Chain;
-    functionName: string;
-    args: any[];
-  };
+  contract: string;
+  chain: Chain;
+  functionName: string;
+  args: any[];
+  priority: boolean;
 };
 
 export default function scheduler<TContracts extends Record<string, Contract>>(
   contracts: TContracts,
-  options: { cache?: boolean; log?: boolean } = { cache: true, log: true }
+  options: { cache: boolean; log: boolean }
 ) {
   let tasks: Array<Task> = [];
   let rescheduled: Record<string, boolean> = {};
@@ -40,10 +39,11 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
       tasks = _tasks;
 
       for (const task of _tasks) {
+        const identifier = parseTaskIdentifier(task);
         success(
-          `Cached task ${colors.blue(
-            task.execute.functionName
-          )} rescheduled for block ${colors.yellow(Number(task.block))}`
+          `Cached task ${identifier} rescheduled for block ${colors.yellow(
+            Number(task.block)
+          )}`
         );
       }
 
@@ -67,24 +67,20 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
     chain: TChain;
     functionName: TFunctionName;
     args?: TArgs;
+    priority?: boolean;
   }) {
     const task: Task = {
       id: createHash("sha256").update(stringify(config)).digest("hex"),
       block:
         typeof config.block === "number" ? BigInt(config.block) : config.block,
-      execute: {
-        contract: config.contract as string,
-        chain: config.chain as Chain,
-        functionName: config.functionName,
-        args: config.args as any,
-      },
+      contract: config.contract as string,
+      chain: config.chain as Chain,
+      functionName: config.functionName,
+      args: config.args as any,
+      priority: config.priority ?? false,
     };
 
-    const identifier = parseTaskIdentifier(
-      task.execute.contract,
-      task.execute.functionName,
-      task.id
-    );
+    const identifier = parseTaskIdentifier(task);
 
     if (options.log) {
       active(`Adding task ${identifier}`);
@@ -117,11 +113,7 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
     const index = tasks.findIndex((task) => task.id === id);
     const task = tasks[index];
 
-    const identifier = parseTaskIdentifier(
-      task.execute.contract,
-      task.execute.functionName,
-      task.id
-    );
+    const identifier = parseTaskIdentifier(task);
 
     if (index === -1) {
       if (options.log) {
@@ -145,11 +137,7 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
     const index = tasks.findIndex((task) => task.id === id);
     let task = tasks[index];
 
-    const identifier = parseTaskIdentifier(
-      task.execute.contract,
-      task.execute.functionName,
-      task.id
-    );
+    const identifier = parseTaskIdentifier(task);
 
     if (index === -1) {
       if (options.log) {

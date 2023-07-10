@@ -22,14 +22,22 @@ describe("BotSwarm", () => {
     { cache: false, log: false }
   );
 
+  const task = {
+    block: 99999999999999999999n,
+    contract: "TestContract",
+    chain: "sepolia",
+    functionName: "testFunction",
+  };
+
   it("Should schedule a task", () => {
-    const success = addTask({
-      block: 99999999999999999999n,
-      contract: "TestContract",
-      chain: "sepolia",
-      functionName: "testFunction",
-    });
+    const success = addTask(task);
     expect(success).toBe(true);
+    expect(tasks().length).toBe(1);
+  });
+
+  it("Should not duplicate a task", () => {
+    const success = addTask(task);
+    expect(success).toBe(false);
     expect(tasks().length).toBe(1);
   });
 

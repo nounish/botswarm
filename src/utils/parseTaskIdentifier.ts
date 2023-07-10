@@ -1,11 +1,8 @@
 import { colors } from "../lib/logger.js";
+import { Task } from "../lib/scheduler.js";
 
-export default function parseTaskIdentifier(
-  contract: string,
-  functionName: string,
-  id: string
-) {
-  return `${colors.green(contract)}:${colors.blue(
-    functionName
-  )}:${colors.magenta(id.substring(0, 5))}`;
+export default function parseTaskIdentifier(task: Task) {
+  return `${colors.green(task.contract)}:${colors.blue(
+    task.functionName
+  )}:${colors.magenta(task.id.substring(0, 5))}`;
 }

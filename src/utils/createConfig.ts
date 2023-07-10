@@ -43,8 +43,10 @@ export default function createConfig<
 
   for (const contract in contracts) {
     for (const deployment in contracts[contract].deployments) {
+      const rpc = rpcs[deployment as Chain];
+
       clients[deployment] = createPublicClient({
-        transport: http(rpcs[deployment as Chain]),
+        transport: http(rpc),
         chain: chains[deployment as Chain],
       });
 
@@ -57,7 +59,7 @@ export default function createConfig<
       wallets[deployment] = createWalletClient({
         account: privateKeyToAccount(process.env.PRIVATE_KEY as Address),
         chain: chains[deployment as Chain],
-        transport: http(rpcs[deployment as Chain]),
+        transport: http(rpc),
       });
     }
   }
