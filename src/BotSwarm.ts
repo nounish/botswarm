@@ -42,7 +42,6 @@ export default function BotSwarm<TContracts extends Record<string, Contract>>(
   } = scheduler(contracts, { cache: options.cache, log: options.log });
   const { execute, executing, write } = executor(contracts, clients, wallets, {
     gasLimitBuffer: options.gasLimitBuffer,
-    priorityMultiplier: options.priorityMultiplier,
   });
   const { onBlock, watch, read } = watcher(contracts, clients);
 
