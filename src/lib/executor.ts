@@ -41,7 +41,7 @@ export default function executor<TContracts extends Record<string, Contract>>(
       const priorityFee =
         task.maxBaseFeeForPriority === 0
           ? parseGwei(`${task.priorityFee}`)
-          : baseFeePerGas > task.maxBaseFeeForPriority
+          : baseFeePerGas > parseGwei(`${task.maxBaseFeeForPriority}`)
           ? 0n
           : parseGwei(`${task.priorityFee}`);
 
