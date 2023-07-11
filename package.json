@@ -1,7 +1,7 @@
 {
-  "name": "@nounish/botswarm",
-  "version": "0.0.1",
-  "description": "A typesafe cross chain framework for scheduling and executing tasks at specific blocks or events.",
+  "name": "@federationwtf/botswarm",
+  "version": "1.0.0",
+  "description": "A typesafe library for scheduling onchain transactions",
   "type": "module",
   "main": "src/index.js",
   "types": "src/index.d.ts",

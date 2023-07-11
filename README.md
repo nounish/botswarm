@@ -9,7 +9,7 @@
 
 # Getting Started
 
-BotSwarm is a typesafe cross chain framework for scheduling and executing transactions at specific blocks or events.
+BotSwarm is a typesafe library for scheduling onchain transactions.
 
 To get started you can either clone [our implementation of BotSwarm](https://github.com/nounish/federation-bot) or follow along with the steps below.
 
@@ -41,9 +41,8 @@ const bot = BotSwarm({
 Before BotSwarm can be run it needs a private key which is automatically loaded from `.env`.
 
 ```env
-PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+PRIVATE_KEY="YOUR PRIVATE KEY"
 ```
-**Note:** This is not a real private key and is just used as an example
 
 ### Options
 
@@ -267,7 +266,7 @@ import { sucess, error, active } from "@federationwtf/botswarm";
 
 success("This is a success!") // Will prepend with a green checkmark
 error("This is probably bad.") // Will prepend with a red x
-active("Doing someting") // Will change the spinner to blue
+active("Doing something") // Will change the spinner to blue
 ```
 
 ## Task Id
