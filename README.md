@@ -18,7 +18,7 @@ To get started you can either clone [our implementation of BotSwarm](https://git
 Create a new NPM project and run
 
 ```bash
-npm i @nounish/botswarm
+npm i @federationwtf/botswarm
 ```
 
 ## Configuration
