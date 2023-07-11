@@ -26,7 +26,7 @@ npm i @federationwtf/botswarm
 Once BotSwarm is installed you can initialize an instance by providing it with the configuration of your contracts. When passing in the ABI you must declare it as const or it won't be typesafe. BotSwarm uses [Viem](https://viem.sh/) under the hood and the deployment networks are extended from it.
 
 ```typescript
-import BotSwarm from "@nounish/botswarm";
+import BotSwarm from "@federationwtf/botswarm";
 
 const bot = BotSwarm({
   NounsPool: { // The contract name
@@ -50,7 +50,7 @@ PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 There are 3 optional properties you can configure with BotSwarm and their default values are shown below.
 
 ```typescript
-import BotSwarm from "@nounish/botswarm";
+import BotSwarm from "@federationwtf/botswarm";
 
 const bot = BotSwarm(
   {...}, 
@@ -80,7 +80,7 @@ The `onBlock` function takes in a chain and a callback which will be called on e
 The `watch` function takes in the contract name, chain, event name, and a callback. These values are typesafe and are derived from the configuration passed into `BotSwarm()`. Once a BidPlaced event is picked up BotSwarm will run the callback. The event object returned by the `watch` callback is a Viem [Log](https://viem.sh/docs/glossary/types.html#log).
 
 ```typescript 
-import BotSwarm from "@nounish/botswarm";
+import BotSwarm from "@federationwtf/botswarm";
 import NounsPoolABI from "./contracts/NounsPool.js";
 
 const { onBlock, watch } = BotSwarm({
@@ -110,7 +110,7 @@ watch({
 BotSwarm also returns a `read` and `write` function for abitrary contract calls. These are typesafe wrappers around Viem's `readContract` and `writeContract` functions.
 
 ```typescript 
-import BotSwarm from "@nounish/botswarm";
+import BotSwarm from "@federationwtf/botswarm";
 import NounsPoolABI from "./contracts/NounsPool.js";
 
 const { read, write } = BotSwarm({
@@ -159,7 +159,7 @@ If task execution fails then BotSwarm will make a second attempt and reschedule 
 All tasks are cached to `.botswarm/cache.txt` when added or removed. BotSwarm will load all cached tasks when restarted.
 
 ```typescript
-import BotSwarm from "@nounish/botswarm";
+import BotSwarm from "@federationwtf/botswarm";
 import NounsPoolABI from "./contracts/NounsPool.js";
 import NounsDAOLogicV2ABI from "./contracts/NounsDAOLogicV2.js";
 
@@ -226,7 +226,7 @@ addTask({
 For the most part the only functions you will need to run BotSwarm will be `addTask`, `read`, and `watch`. However, when your situation requires more control over how tasks are added or contracts are written to, BotSwarm returns all of the functions and variables it uses internally. Below is a complete example of all of the components you can use to add advanced functionality to your bot.
 
 ```typescript
-import BotSwarm from "@nounish/botswarm";
+import BotSwarm from "@federationwtf/botswarm";
 import NounsPoolABI from "./contracts/NounsPool.js";
 
 const {
@@ -263,7 +263,7 @@ const {
 If you would like to log custom data to the terminal you can import `success`, `error`, and/or `active` which each take in a string. 
 
 ```typescript
-import { sucess, error, active } from "@nounish/botswarm";
+import { sucess, error, active } from "@federationwtf/botswarm";
 
 success("This is a success!") // Will prepend with a green checkmark
 error("This is probably bad.") // Will prepend with a red x
@@ -279,7 +279,7 @@ Internally, BotSwarm manages tasks by providing each task an id. The generation 
 BotSwarm uses Viem under the hood but it can be used directly by referencing the contracts object.
 
 ```typescript
-import BotSwarm from "@nounish/botswarm";
+import BotSwarm from "@federationwtf/botswarm";
 import NounsPoolABI from "./contracts/NounsPool.js";
 import NounsDAOLogicV2ABI from "./contracts/NounsDAOLogicV2.js";
 import { getContract } from "viem";
