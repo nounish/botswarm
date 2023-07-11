@@ -13,7 +13,6 @@ export default function BotSwarm<TContracts extends Record<string, Contract>>(
     rpcs?: RPCs;
     gasLimitBuffer?: number;
     blockExecutionBuffer?: number;
-    priorityMultiplier?: number;
   }
 ) {
   const options = {
@@ -24,7 +23,6 @@ export default function BotSwarm<TContracts extends Record<string, Contract>>(
     },
     gasLimitBuffer: 30000,
     blockExecutionBuffer: 0,
-    priorityMultiplier: 1,
     ...config,
   };
 

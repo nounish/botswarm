@@ -18,7 +18,7 @@ export default function executor<TContracts extends Record<string, Contract>>(
   contracts: TContracts,
   clients: Record<string, Client>,
   wallets: Record<string, Wallet>,
-  options: { gasLimitBuffer: number }
+  options: { gasLimitBuffer: number | bigint }
 ) {
   let executing: Record<string, boolean> = {};
 
@@ -40,10 +40,10 @@ export default function executor<TContracts extends Record<string, Contract>>(
 
       const priorityFee =
         task.maxBaseFeeForPriority === 0
-          ? parseGwei(`${task.priorityFee}`)
-          : baseFeePerGas > parseGwei(`${task.maxBaseFeeForPriority}`)
+          ? parseGwei(`${Number(task.priorityFee)}`)
+          : baseFeePerGas > parseGwei(`${Number(task.maxBaseFeeForPriority)}`)
           ? 0n
-          : parseGwei(`${task.priorityFee}`);
+          : parseGwei(`${Number(task.priorityFee)}`);
 
       const hash = await write({
         contract: task.contract,
@@ -101,9 +101,9 @@ export default function executor<TContracts extends Record<string, Contract>>(
     chain: TChain;
     functionName: TFunctionName;
     args?: TArgs;
-    maxPriorityFeePerGas?: bigint;
-    maxFeePerGas?: bigint;
-    gasLimit?: bigint;
+    maxPriorityFeePerGas?: bigint | number;
+    maxFeePerGas?: bigint | number;
+    gasLimit?: bigint | number;
   }) {
     try {
       const client = clients[config.chain as string];
@@ -118,8 +118,12 @@ export default function executor<TContracts extends Record<string, Contract>>(
           abi,
           functionName: config.functionName as string,
           args: config.args as any,
-          maxPriorityFeePerGas: config.maxPriorityFeePerGas,
-          maxFeePerGas: config.maxFeePerGas,
+          maxPriorityFeePerGas: config.maxPriorityFeePerGas
+            ? BigInt(config.maxPriorityFeePerGas)
+            : undefined,
+          maxFeePerGas: config.maxFeePerGas
+            ? BigInt(config.maxFeePerGas)
+            : undefined,
           account: wallet.account,
         }));
 
@@ -129,9 +133,13 @@ export default function executor<TContracts extends Record<string, Contract>>(
         abi,
         functionName: config.functionName as string,
         args: config.args as any,
-        maxPriorityFeePerGas: config.maxPriorityFeePerGas,
-        maxFeePerGas: config.maxFeePerGas,
-        gas: gasLimit + BigInt(options.gasLimitBuffer),
+        maxPriorityFeePerGas: config.maxPriorityFeePerGas
+          ? BigInt(config.maxPriorityFeePerGas)
+          : undefined,
+        maxFeePerGas: config.maxFeePerGas
+          ? BigInt(config.maxFeePerGas)
+          : undefined,
+        gas: BigInt(gasLimit) + BigInt(options.gasLimitBuffer),
       });
 
       return wallet.writeContract(request);

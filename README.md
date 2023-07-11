@@ -60,7 +60,9 @@ const bot = BotSwarm(
     cache: true, // Cache tasks to .botswarm/cache.txt
     rps: { // Override public rpcs for clients and wallets
       mainnet: "https://rpc.flashbots.net",
-    }
+    },
+    gasLimitBuffer: 30000, // Increases the gas limit of a transaction by the buffer amount in gas units
+    blockExecutionBuffer: 0 // Delays execution of all tasks by a certain number of blocks
   }
 );
 ```
@@ -134,6 +136,20 @@ const hash = await write({
 });
 ```
 
+The write function also includes gas related options that can be overriden for more control over the transaction.
+
+```typescript
+const hash = await write({
+  contract: "NounsPool",
+  chain: "mainnet",
+  functionName: "castVote",
+  args: [325],
+  maxPriorityFeePerGas: 10,
+  maxFeePerGas: 30,
+  gasLimit: 300000
+});
+```
+
 ## Scheduling tasks
 
 Tasks are specified contract calls to be executed after a given block. To add a task call `addTask` which takes in a block number contract call details which mimic the parameters of the `write` function used above. BotSwarm will watch the specified chain and call the `write` function when the current block is >= the block passed into `addTask`. Below is an example of [our implementation](https://github.com/nounish/federation-bot) of this to cast a NounsPool vote result to NounsDAO before the proposal ends. 
@@ -189,6 +205,20 @@ watch(
     });
   }
 );
+```
+
+Some usecases like MEV extraction might require that tasks execute as fast as possible. For situations like this you can specify the `priorityFee` (gwei) and `maxBaseFeeForPriority` (gwei) properties. If `maxBaseFeeForPriority` is less than the base fee at time of execution then BotSwarm will drop the `priorityFee` from the transaction. This is beneficial for scenarios where you still want the reliability of the transaction going through but also the ability to drop the priority fee if the base fee makes it unprofitable.
+
+```typescript
+addTask({
+  block: endBlock - castWindow,
+  contract: "NounsPool",
+  chain: "mainnet",
+  functionName: "castVote",
+  args: [event.args.propId],
+  priorityFee: 10,
+  maxBaseFeeForPriority: 25,
+});
 ```
 
 # Advanced Customization
