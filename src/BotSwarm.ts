@@ -3,7 +3,7 @@ import scheduler from "./lib/scheduler.js";
 import watcher from "./lib/watcher.js";
 import { start } from "./lib/logger.js";
 import createConfig, { RPCs, Contract } from "./utils/createConfig.js";
-import _ from "viem/node_modules/abitype";
+import type _ from "viem/node_modules/abitype";
 
 export default function BotSwarm<TContracts extends Record<string, Contract>>(
   contracts: TContracts,
@@ -74,7 +74,6 @@ export default function BotSwarm<TContracts extends Record<string, Contract>>(
     clients,
     wallets,
     contracts,
-
     // Scheduler
     tasks,
     rescheduled,
@@ -82,12 +81,10 @@ export default function BotSwarm<TContracts extends Record<string, Contract>>(
     removeTask,
     rescheduleTask,
     cacheTasks,
-
     // Executor
     execute,
     executing,
     write,
-
     // Watcher
     onBlock,
     watch,

@@ -27,7 +27,7 @@ describe("BotSwarm", () => {
     contract: "TestContract",
     chain: "sepolia",
     functionName: "testFunction",
-  };
+  } as const;
 
   it("Should schedule a task", () => {
     const success = addTask(task);

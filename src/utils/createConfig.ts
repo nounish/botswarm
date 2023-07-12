@@ -12,7 +12,7 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import * as chains from "viem/chains";
-import _ from "viem/node_modules/abitype";
+import type _ from "viem/node_modules/abitype";
 import env from "dotenv";
 env.config();
 
@@ -64,5 +64,8 @@ export default function createConfig<
     }
   }
 
-  return { clients, wallets };
+  return {
+    clients,
+    wallets,
+  };
 }

@@ -12,6 +12,8 @@
     "skipLibCheck": true,
     "declaration": true,
 
+    "esModuleInterop": true,
+
     "outDir": "dist",
     "rootDir": "./"
   },

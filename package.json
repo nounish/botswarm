@@ -1,13 +1,14 @@
 {
   "name": "@federationwtf/botswarm",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "A typesafe library for scheduling onchain transactions",
   "type": "module",
   "main": "src/index.js",
   "types": "src/index.d.ts",
   "scripts": {
-    "build": "tsc",
-    "test": "vitest src"
+    "build": "tsc && npm run fix-bug",
+    "test": "vitest src",
+    "fix-bug": "replace 'viem/node_modules/abitype' 'abitype' dist/src/BotSwarm.d.ts dist/src/utils/createConfig.d.ts"
   },
   "dependencies": {
     "abitype": "^0.8.11",
@@ -15,6 +16,7 @@
     "figlet": "^1.6.0",
     "kleur": "^4.1.5",
     "nanospinner": "^1.1.0",
+    "replace": "^1.2.2",
     "typescript": "^5.1.3",
     "viem": "^1.0.7"
   },
