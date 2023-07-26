@@ -58,7 +58,7 @@ export default function executor<TContracts extends Record<string, Contract>>(
         throw new Error("Failed to execute task");
       }
 
-      const receipt = await client.waitForTransactionReceipt({ hash });
+      const receipt = await client.waitForTransactionReceipt({ hash, timeout: 120_000,  });
 
       if (receipt.status === "reverted") {
         error(`
