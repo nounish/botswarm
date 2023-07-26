@@ -1,6 +1,6 @@
 {
   "name": "@federationwtf/botswarm",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A typesafe library for scheduling onchain transactions",
   "type": "module",
   "main": "src/index.js",
