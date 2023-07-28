@@ -136,7 +136,7 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
     return true;
   }
 
-  function rescheduleTask(id: string) {
+  function rescheduleTask(id: string, flagAsRescheduled?: boolean) {
     const index = tasks.findIndex((task) => task.id === id);
     let task = tasks[index];
 
@@ -150,7 +150,8 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
     }
 
     task.block += 5n;
-    rescheduled[id] = true;
+
+    if (flagAsRescheduled) rescheduled[id] = true;
 
     if (options.cache) cacheTasks();
 

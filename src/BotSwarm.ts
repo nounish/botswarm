@@ -63,7 +63,7 @@ export default function BotSwarm<TContracts extends Record<string, Contract>>(
             continue;
           }
 
-          rescheduleTask(task.id);
+          rescheduleTask(task.id, true);
         }
       }
     });
