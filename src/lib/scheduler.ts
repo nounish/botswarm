@@ -112,6 +112,16 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
     return true;
   }
 
+  function getTask(id: string) {
+    const task = tasks.find((task) => task.id === id);
+
+    if (!task && options.log) {
+      error(`Could not find task with id ${id}`);
+    }
+
+    return task;
+  }
+
   function removeTask(id: string) {
     const index = tasks.findIndex((task) => task.id === id);
     const task = tasks[index];
@@ -136,7 +146,11 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
     return true;
   }
 
-  function rescheduleTask(id: string, flagAsRescheduled?: boolean) {
+  function rescheduleTask(
+    id: string,
+    block: number | bigint,
+    flagAsRescheduled?: boolean
+  ) {
     const index = tasks.findIndex((task) => task.id === id);
     let task = tasks[index];
 
@@ -149,7 +163,7 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
       return false;
     }
 
-    task.block += 5n;
+    task.block = typeof block === "number" ? BigInt(block) : block;
 
     if (flagAsRescheduled) rescheduled[id] = true;
 
@@ -180,6 +194,7 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
     tasks: () => tasks,
     rescheduled: () => rescheduled,
     addTask,
+    getTask,
     removeTask,
     cacheTasks,
     rescheduleTask,

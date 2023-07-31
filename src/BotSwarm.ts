@@ -34,6 +34,7 @@ export default function BotSwarm<TContracts extends Record<string, Contract>>(
     tasks,
     rescheduled,
     addTask,
+    getTask,
     removeTask,
     rescheduleTask,
     cacheTasks,
@@ -63,7 +64,7 @@ export default function BotSwarm<TContracts extends Record<string, Contract>>(
             continue;
           }
 
-          rescheduleTask(task.id, true);
+          rescheduleTask(task.id, block + 5n, true);
         }
       }
     });
@@ -78,6 +79,7 @@ export default function BotSwarm<TContracts extends Record<string, Contract>>(
     tasks,
     rescheduled,
     addTask,
+    getTask,
     removeTask,
     rescheduleTask,
     cacheTasks,

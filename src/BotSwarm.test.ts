@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import BotSwarm from "./index.js";
 
 describe("BotSwarm", () => {
-  const { tasks, addTask, rescheduleTask, removeTask } = BotSwarm(
+  const { tasks, addTask, getTask, rescheduleTask, removeTask } = BotSwarm(
     {
       TestContract: {
         abi: [
@@ -35,6 +35,13 @@ describe("BotSwarm", () => {
     expect(tasks().length).toBe(1);
   });
 
+  it("Should get a task", () => {
+    const _task = tasks()[0];
+    const task = getTask(_task.id);
+    expect(task).toBeDefined();
+    expect(task).toBe(_task);
+  });
+
   it("Should not duplicate a task", () => {
     const success = addTask(task);
     expect(success).toBe(false);
@@ -42,7 +49,7 @@ describe("BotSwarm", () => {
   });
 
   it("Should reschedule a task", () => {
-    const success = rescheduleTask(tasks()[0].id);
+    const success = rescheduleTask(tasks()[0].id, tasks()[0].block + 5n);
     expect(success).toBe(true);
     expect(tasks()[0].block).toBe(99999999999999999999n + 5n);
   });
