@@ -208,13 +208,15 @@ watch(
 
 ## Casting with Farcaster
 
-BotSwarm provides a native wrapper around [farcaster-js](https://github.com/standard-crypto/farcaster-js) making it incredibly easy to create [Farcaster](https://www.farcaster.xyz/) bots. The example below casts to the Farcaster network every time a new NounsDAO proposal is created.
+BotSwarm provides a native wrapper around [farcaster-js](https://github.com/standard-crypto/farcaster-js) making it incredibly easy to create [Farcaster](https://www.farcaster.xyz/) bots. 
 
 To get started, input your Farcaster mnemonic phrase in `.env`
 
 ```bash
 FARCASTER_PHRASE="Your Farcaster mnemonic phrase"
 ```
+
+The example below casts to the Farcaster network every time a new NounsDAO proposal is created.
 
 ```typescript
 import BotSwarm, { NounsDAOLogicV2 } from "@federationwtf/botswarm";
