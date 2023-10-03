@@ -8,9 +8,12 @@ export default function caster(
 ) {
   const missingMnemonicError = "Missing property FARCASTER_PHRASE from .env";
 
-  async function cast(text: string) {
+  async function cast(text: string, options?: { channel?: string }) {
     try {
       if (!client) throw new Error(missingMnemonicError);
+
+      // TODO: Add channel support to farcaster-js
+      if (options?.channel) return client.publishCast(text, options.channel);
 
       return client.publishCast(text);
     } catch (error) {
@@ -98,9 +101,20 @@ export default function caster(
     }
   }
 
-  async function followUser(fid: number) {
+  async function followUser(user: number | string) {
     try {
       if (!client) throw new Error(missingMnemonicError);
+
+      let fid: number;
+
+      if (typeof user === "number") fid = user;
+      else {
+        const _fid = await client.lookupUserByUsername(user);
+
+        if (!_fid) throw new Error(`User with the handle ${user} not found`);
+
+        fid = _fid.fid;
+      }
 
       return client.followUser({ fid });
     } catch (error) {
@@ -108,9 +122,20 @@ export default function caster(
     }
   }
 
-  async function unfollowUser(fid: number) {
+  async function unfollowUser(user: number | string) {
     try {
       if (!client) throw new Error(missingMnemonicError);
+
+      let fid: number;
+
+      if (typeof user === "number") fid = user;
+      else {
+        const _fid = await client.lookupUserByUsername(user);
+
+        if (!_fid) throw new Error(`User with the handle ${user} not found`);
+
+        fid = _fid.fid;
+      }
 
       return client.unfollowUser({ fid });
     } catch (error) {

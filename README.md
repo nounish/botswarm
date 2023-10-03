@@ -29,7 +29,7 @@ Once BotSwarm is installed you can initialize an instance by providing it with t
 import BotSwarm from "@federationwtf/botswarm";
 
 const bot = BotSwarm({
-  NounsPool: { // The contract name
+  MyContract: { // The contract name
     abi: [...] as const, // The contract abi
     deployments: {
       mainnet: "0xA...A" // The network and address of the deployment 
@@ -38,10 +38,29 @@ const bot = BotSwarm({
 })
 ```
 
+We provide some premade contracts from [Federation](https://github.com/nounish/federation-protocol) and [NounsDAO](https://github.com/nounsDAO/nouns-monorepo/tree/master/packages/nouns-contracts)
+
+```typescript
+import BotSwarm {
+  // Federation
+  FederationNounsPool,
+  FederationNounsGovernor,
+  FederationNounsRelayer,
+
+  // NounsDAO
+  NounsDAOLogicV2
+} from "@federationwtf/botswarm";
+
+const bot = BotSwarm({
+  FederationNounsPool,
+  NounsDAOLogicV2
+});
+```
+
 Before BotSwarm can be run it needs a private key which is automatically loaded from `.env`.
 
 ```env
-PRIVATE_KEY="YOUR PRIVATE KEY"
+ETHEREUM_PRIVATE_KEY="YOUR PRIVATE KEY"
 ```
 
 ### Options
@@ -52,7 +71,7 @@ There are 3 optional properties you can configure with BotSwarm and their defaul
 import BotSwarm from "@federationwtf/botswarm";
 
 const bot = BotSwarm(
-  {...}, 
+  {}, 
   // These are the default values that can be overidden
   {
     logs: true, // Log updates to the console
@@ -79,24 +98,16 @@ The `onBlock` function takes in a chain and a callback which will be called on e
 The `watch` function takes in the contract name, chain, event name, and a callback. These values are typesafe and are derived from the configuration passed into `BotSwarm()`. Once a BidPlaced event is picked up BotSwarm will run the callback. The event object returned by the `watch` callback is a Viem [Log](https://viem.sh/docs/glossary/types.html#log).
 
 ```typescript 
-import BotSwarm from "@federationwtf/botswarm";
-import NounsPoolABI from "./contracts/NounsPool.js";
+import BotSwarm { FederationNounsPool } from "@federationwtf/botswarm";
 
-const { onBlock, watch } = BotSwarm({
-  NounsPool: {
-    abi: NounsPoolABI, 
-    deployments: {
-      mainnet: "0xBE5E6De0d0Ac82b087bAaA1d53F145a52EfE1642"
-    }
-  }
-});
+const { onBlock, watch } = BotSwarm({ FederationNounsPool });
 
 onBlock("mainnet", async (block) => {
   console.log(`Current block: ${block}`);
 })
 
 watch({
-  contract: "NounsPool",
+  contract: "FederationNounsPool",
   chain: "mainnet",
   event: "BidPlaced",
 }, async (event) => {
@@ -109,26 +120,18 @@ watch({
 BotSwarm also returns a `read` and `write` function for abitrary contract calls. These are typesafe wrappers around Viem's `readContract` and `writeContract` functions.
 
 ```typescript 
-import BotSwarm from "@federationwtf/botswarm";
-import NounsPoolABI from "./contracts/NounsPool.js";
+import BotSwarm { FederationNounsPool } from "@federationwtf/botswarm";
 
-const { read, write } = BotSwarm({
-  NounsPool: {
-    abi: NounsPoolABI, 
-    deployments: {
-      mainnet: "0xBE5E6De0d0Ac82b087bAaA1d53F145a52EfE1642"
-    }
-  }
-});
+const { read, write } = BotSwarm({ FederationNounsPool });
 
 const { castWindow } = await read({
-  contract: "NounsPool",
+  contract: "FederationNounsPool",
   chain: "mainnet",
   functionName: "getConfig",
 });
 
 const hash = await write({
-  contract: "NounsPool",
+  contract: "FederationNounsPool",
   chain: "mainnet",
   functionName: "castVote",
   args: [325]
@@ -158,32 +161,23 @@ If task execution fails then BotSwarm will make a second attempt and reschedule 
 All tasks are cached to `.botswarm/cache.txt` when added or removed. BotSwarm will load all cached tasks when restarted.
 
 ```typescript
-import BotSwarm from "@federationwtf/botswarm";
-import NounsPoolABI from "./contracts/NounsPool.js";
-import NounsDAOLogicV2ABI from "./contracts/NounsDAOLogicV2.js";
+import BotSwarm {
+  FederationNounsPool,
+  NounsDAOLogicV2
+} from "@federationwtf/botswarm";
 
 const { addTask, watch, read } = BotSwarm({
-  NounsPool: {
-    abi: NounsPoolABI,
-    deployments: {
-      mainnet: "0xBE5E6De0d0Ac82b087bAaA1d53F145a52EfE1642",
-    },
-  },
-  NounsDAOLogicV2: {
-    abi: NounsDAOLogicV2ABI,
-    deployments: {
-      mainnet: "0x6f3E6272A167e8AcCb32072d08E0957F9c79223d",
-    },
-  },
+  FederationNounsPool,
+  NounsDAOLogicV2
 });
 
 watch(
-  { contract: "NounsPool", chain: "mainnet", event: "BidPlaced" },
+  { contract: "FederationNounsPool", chain: "mainnet", event: "BidPlaced" },
   async (event) => {
     if (!event.args.propId) return;
 
     const { castWindow } = await read({
-      contract: "NounsPool",
+      contract: "FederationNounsPool",
       chain: "mainnet",
       functionName: "getConfig",
     });
@@ -197,7 +191,7 @@ watch(
 
     addTask({
       block: endBlock - castWindow,
-      contract: "NounsPool",
+      contract: "FederationNounsPool",
       chain: "mainnet",
       functionName: "castVote",
       args: [event.args.propId],
@@ -278,8 +272,10 @@ if (post) {
   const postReply = reply("Yeah, automating my Farcaster posts is super simple!", post);
 }
 
-followUser("16074"); // @federation
-// unfollowUser("16074"); Not recommended!
+const postInChannel = await cast("This casts to a channel", { channel: "channel" });
+
+followUser("@federation");
+// unfollowUser("@federation"); Not recommended!
 
 recast(post);
 removeRecast(post);
@@ -299,11 +295,12 @@ For the most part the only functions you will need to run BotSwarm will be `addT
 
 ```typescript
 import BotSwarm from "@federationwtf/botswarm";
-import NounsPoolABI from "./contracts/NounsPool.js";
 
 const {
     clients, // Viem public clients for each chain
     wallets, // Viem wallet clients for each chain
+    farcasterAccount, // The Farcaster account
+    farcasterClient, // The Farcaster client
     contracts, // A readonly representation of the contracts passed into BotSwarm()
     
     tasks, // The current active tasks 
@@ -320,14 +317,19 @@ const {
     onBlock,
     watch,
     read,
-  } = BotSwarm({
-  NounsPool: {
-    abi: NounsPoolABI,
-    deployments: {
-      mainnet: "0xBE5E6De0d0Ac82b087bAaA1d53F145a52EfE1642",
-    },
-  },
-});
+
+    cast, // Cast to Farcaster
+    deleteCast, // Delete a cast
+    reply, // Reply to a cast
+    recast, // Recast a cast
+    removeRecast, // Remove a recast
+    like, // Like a cast
+    removeLike, // Remove a like
+    watchCast, // Watch a cast
+    unwatchCast, // Unwatch a cast
+    followUser, // Follow a user
+    unfollowUser // Unfollow a user
+  } = BotSwarm({});
 ```
 
 ## Logging
