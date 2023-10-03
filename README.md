@@ -206,6 +206,77 @@ watch(
 );
 ```
 
+## Casting with Farcaster
+
+BotSwarm provides a native wrapper around [farcaster-js](https://github.com/standard-crypto/farcaster-js) making it incredibly easy to create [Farcaster](https://www.farcaster.xyz/) bots. The example below casts to the Farcaster network every time a new NounsDAO proposal is created.
+
+To get started, input your Farcaster mnemonic phrase in `.env`
+
+```bash
+FARCASTER_PHRASE="Your Farcaster mnemonic phrase"
+```
+
+```typescript
+import BotSwarm, { NounsDAOLogicV2 } from "@federationwtf/botswarm";
+
+const { watch, cast } = BotSwarm({
+  NounsDAOLogicV2,
+});
+
+watch(
+  {
+    contract: "NounsDAOLogicV2",
+    chain: "mainnet",
+    event: "ProposalCreated",
+  },
+  async (event) => {
+    cast(
+      `Proposal ${event.args.id} was created by ${event.args.proposer}\n ${event.args.description}`
+    );
+  }
+);
+```
+
+Casts aren't the only thing you can automate. BotSwarm also exports functions for every type of write action to the Farcaster network.
+
+```typescript
+import BotSwarm from "@federationwtf/botswarm";
+
+const { 
+  cast, 
+  deleteCast,
+  reply,
+  recast,
+  removeRecast,
+  like,
+  removeLike,
+  watchCast,
+  unwatchCast,
+  followUser,
+  unfollowUser
+} = BotSwarm({});
+
+const post = await cast("Wow, BotSwarm is pretty cool!");
+
+if (post) {
+  const postReply = reply("Yeah, automating my Farcaster posts is super simple!", post);
+}
+
+followUser("16074"); // @federation
+// unfollowUser("16074"); Not recommended!
+
+recast(post);
+removeRecast(post);
+
+like(post);
+removeLike(post);
+
+watchCast(post);
+unwatchCast(post);
+
+deleteCast(post);
+```
+
 Some usecases like MEV extraction might require that tasks execute as fast as possible. For situations like this you can specify the `priorityFee` (gwei) and `maxBaseFeeForPriority` (gwei) properties. If `maxBaseFeeForPriority` is less than the base fee at time of execution then BotSwarm will drop the `priorityFee` from the transaction. This is beneficial for scenarios where you still want the reliability of the transaction going through but also the ability to drop the priority fee if the base fee makes it unprofitable.
 
 ```typescript
@@ -280,7 +351,6 @@ BotSwarm uses Viem under the hood but it can be used directly by referencing the
 ```typescript
 import BotSwarm from "@federationwtf/botswarm";
 import NounsPoolABI from "./contracts/NounsPool.js";
-import NounsDAOLogicV2ABI from "./contracts/NounsDAOLogicV2.js";
 import { getContract } from "viem";
 
 const { contracts, clients, wallets } = BotSwarm({

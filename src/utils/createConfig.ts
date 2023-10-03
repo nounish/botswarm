@@ -12,8 +12,10 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import * as chains from "viem/chains";
+import { Wallet as EthersWallet } from "ethers";
 import type _ from "viem/node_modules/abitype";
 import env from "dotenv";
+import { MerkleAPIClient } from "@standard-crypto/farcaster-js";
 env.config();
 
 export type Chain = keyof typeof chains;
@@ -33,6 +35,10 @@ export type Wallet = WalletClient<
   PrivateKeyAccount
 >;
 
+export type FarcasterAccount = EthersWallet | undefined;
+
+export type FarcasterClient = MerkleAPIClient | undefined;
+
 export type RPCs = { [TChain in Chain]?: string };
 
 export default function createConfig<
@@ -50,22 +56,34 @@ export default function createConfig<
         chain: chains[deployment as Chain],
       });
 
-      if (!process.env.PRIVATE_KEY) {
+      if (!process.env.ETHEREUM_PRIVATE_KEY) {
         throw new Error(
-          "PRIVATE_KEY environment variable is required to run BotSwarm, see: https://github.com/nounish/botswarm/tree/main#configuration"
+          "ETHEREUM_PRIVATE_KEY environment variable is required to run BotSwarm, see: https://github.com/nounish/botswarm/tree/main#configuration"
         );
       }
 
       wallets[deployment] = createWalletClient({
-        account: privateKeyToAccount(process.env.PRIVATE_KEY as Address),
+        account: privateKeyToAccount(
+          process.env.ETHEREUM_PRIVATE_KEY as Address
+        ),
         chain: chains[deployment as Chain],
         transport: http(rpc),
       });
     }
   }
 
+  let farcasterAccount: FarcasterAccount;
+  let farcasterClient: FarcasterClient;
+
+  if (process.env.FARCASTER_PHRASE) {
+    farcasterAccount = EthersWallet.fromMnemonic(process.env.FARCASTER_PHRASE);
+    farcasterClient = new MerkleAPIClient(farcasterAccount);
+  }
+
   return {
     clients,
     wallets,
+    farcasterAccount,
+    farcasterClient,
   };
 }

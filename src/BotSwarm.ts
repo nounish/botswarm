@@ -1,6 +1,7 @@
 import executor from "./lib/executor.js";
 import scheduler from "./lib/scheduler.js";
 import watcher from "./lib/watcher.js";
+import caster from "./lib/caster.js";
 import { start } from "./lib/logger.js";
 import createConfig, { RPCs, Contract } from "./utils/createConfig.js";
 import type _ from "viem/node_modules/abitype";
@@ -28,7 +29,10 @@ export default function BotSwarm<TContracts extends Record<string, Contract>>(
 
   if (options.log) start();
 
-  const { clients, wallets } = createConfig(contracts, options.rpcs);
+  const { clients, wallets, farcasterAccount, farcasterClient } = createConfig(
+    contracts,
+    options.rpcs
+  );
 
   const {
     tasks,
@@ -43,6 +47,21 @@ export default function BotSwarm<TContracts extends Record<string, Contract>>(
     gasLimitBuffer: options.gasLimitBuffer,
   });
   const { onBlock, watch, read } = watcher(contracts, clients);
+  const {
+    cast,
+    deleteCast,
+    reply,
+    recast,
+    removeRecast,
+    like,
+    removeLike,
+    watchCast,
+    unwatchCast,
+    followUser,
+    unfollowUser,
+  } = caster(farcasterClient, {
+    log: options.log,
+  });
 
   for (const chain in clients) {
     onBlock(chain, async (block) => {
@@ -74,6 +93,8 @@ export default function BotSwarm<TContracts extends Record<string, Contract>>(
     // Config
     clients,
     wallets,
+    farcasterAccount,
+    farcasterClient,
     contracts,
     // Scheduler
     tasks,
@@ -91,5 +112,17 @@ export default function BotSwarm<TContracts extends Record<string, Contract>>(
     onBlock,
     watch,
     read,
+    // Caster
+    cast,
+    deleteCast,
+    reply,
+    recast,
+    removeRecast,
+    like,
+    removeLike,
+    watchCast,
+    unwatchCast,
+    followUser,
+    unfollowUser,
   };
 }
