@@ -206,6 +206,20 @@ watch(
 );
 ```
 
+Some usecases like MEV extraction might require that tasks execute as fast as possible. For situations like this you can specify the `priorityFee` (gwei) and `maxBaseFeeForPriority` (gwei) properties. If `maxBaseFeeForPriority` is less than the base fee at time of execution then BotSwarm will drop the `priorityFee` from the transaction. This is beneficial for scenarios where you still want the reliability of the transaction going through but also the ability to drop the priority fee if the base fee makes it unprofitable.
+
+```typescript
+addTask({
+  block: endBlock - castWindow,
+  contract: "NounsPool",
+  chain: "mainnet",
+  functionName: "castVote",
+  args: [event.args.propId],
+  priorityFee: 10,
+  maxBaseFeeForPriority: 25,
+});
+```
+
 ## Casting with Farcaster
 
 BotSwarm provides a native wrapper around [farcaster-js](https://github.com/standard-crypto/farcaster-js) making it incredibly easy to create [Farcaster](https://www.farcaster.xyz/) bots. 
@@ -277,20 +291,6 @@ watchCast(post);
 unwatchCast(post);
 
 deleteCast(post);
-```
-
-Some usecases like MEV extraction might require that tasks execute as fast as possible. For situations like this you can specify the `priorityFee` (gwei) and `maxBaseFeeForPriority` (gwei) properties. If `maxBaseFeeForPriority` is less than the base fee at time of execution then BotSwarm will drop the `priorityFee` from the transaction. This is beneficial for scenarios where you still want the reliability of the transaction going through but also the ability to drop the priority fee if the base fee makes it unprofitable.
-
-```typescript
-addTask({
-  block: endBlock - castWindow,
-  contract: "NounsPool",
-  chain: "mainnet",
-  functionName: "castVote",
-  args: [event.args.propId],
-  priorityFee: 10,
-  maxBaseFeeForPriority: 25,
-});
 ```
 
 # Advanced Customization
