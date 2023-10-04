@@ -1,9 +1,9 @@
 import { Contract } from "../utils/createConfig";
 
 // Federation
-import NounsPoolABI from "./abi/federation/NounsPool";
-import NounsGovernorABI from "./abi/federation/NounsGovernor";
-import NounsRelayerABI from "./abi/federation/NounsRelayer";
+import FederationNounsPoolABI from "./abi/federation/NounsPool";
+import FederationNounsGovernorABI from "./abi/federation/NounsGovernor";
+import FederationNounsRelayerABI from "./abi/federation/NounsRelayer";
 
 // Nouns
 import NounsDAOLogicV3ABI from "./abi/nouns/NounsDAOLogicV3";
@@ -15,23 +15,23 @@ import NounsDAOExecutorV2ABI from "./abi/nouns/NounsDAOExecutorV2";
 
 // Federation
 
-export const NounsPool = {
-  abi: NounsPoolABI,
+export const FederationNounsPool = {
+  abi: FederationNounsPoolABI,
   deployments: {
     mainnet: "0x0f722d69B3D8C292E85F2b1E5D9F4439edd58F1e",
     sepolia: "0xd27dfb807DC3435AC3e14b55FcF1B50F96fF769a",
   },
 } as const satisfies Contract;
 
-export const NounsGovernor = {
-  abi: NounsGovernorABI,
+export const FederationNounsGovernor = {
+  abi: FederationNounsGovernorABI,
   deployments: {
     zkSyncTestnet: "0x",
   },
 } as const satisfies Contract;
 
-export const NounsRelayer = {
-  abi: NounsRelayerABI,
+export const FederationNounsRelayer = {
+  abi: FederationNounsRelayerABI,
   deployments: {
     sepolia: "0x",
   },

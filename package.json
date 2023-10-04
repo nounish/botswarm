@@ -10,8 +10,21 @@
     "fix-bug": "replace 'viem/node_modules/abitype' 'abitype' dist/src/BotSwarm.d.ts dist/src/utils/createConfig.d.ts"
   },
   "exports": {
-    ".": "./src/index.js",
-    "./contracts": "./src/contracts/index.js"
+    ".": {
+      "default": "./src/index.js",
+      "types": "./src/index.d.ts"
+    },
+    "./contracts": {
+      "default": "./src/contracts/index.js",
+      "types": "./src/contracts/index.d.ts"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "contracts": [
+        "./src/contracts/index.d.ts"
+      ]
+    }
   },
   "dependencies": {
     "@standard-crypto/farcaster-js": "^5.6.0",

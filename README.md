@@ -52,7 +52,7 @@ import BotSwarm {
   NounsDescriptor,
   NounsSeeder,
   NounsToken
-} from "@federationwtf/botswarm";
+} from "@federationwtf/botswarm/contracts";
 
 const bot = BotSwarm({
   FederationNounsPool,
@@ -106,7 +106,8 @@ The `onBlock` function takes in a chain and a callback which will be called on e
 The `watch` function takes in the contract name, chain, event name, and a callback. These values are typesafe and are derived from the configuration passed into `BotSwarm()`. Once a BidPlaced event is picked up BotSwarm will run the callback. The event object returned by the `watch` callback is a Viem [Log](https://viem.sh/docs/glossary/types.html#log).
 
 ```typescript 
-import BotSwarm { FederationNounsPool } from "@federationwtf/botswarm";
+import BotSwarm from "@federationwtf/botswarm";
+import { FederationNounsPool } from "@federationwtf/botswarm/contracts";
 
 const { onBlock, watch } = BotSwarm({ FederationNounsPool });
 
@@ -128,7 +129,8 @@ watch({
 BotSwarm also returns a `read` and `write` function for abitrary contract calls. These are typesafe wrappers around Viem's `readContract` and `writeContract` functions.
 
 ```typescript 
-import BotSwarm { FederationNounsPool } from "@federationwtf/botswarm";
+import BotSwarm from "@federationwtf/botswarm";
+import { FederationNounsPool } from "@federationwtf/botswarm/contracts";
 
 const { read, write } = BotSwarm({ FederationNounsPool });
 
@@ -169,10 +171,11 @@ If task execution fails then BotSwarm will make a second attempt and reschedule 
 All tasks are cached to `.botswarm/cache.txt` when added or removed. BotSwarm will load all cached tasks when restarted.
 
 ```typescript
-import BotSwarm {
+import BotSwarm from "@federationwtf/botswarm";
+import {   
   FederationNounsPool,
-  NounsDAOLogicV3
-} from "@federationwtf/botswarm";
+  NounsDAOLogicV3 
+} from "@federationwtf/botswarm/contracts";
 
 const { addTask, watch, read } = BotSwarm({
   FederationNounsPool,
@@ -235,7 +238,8 @@ FARCASTER_PHRASE="Your Farcaster mnemonic phrase"
 The example below casts to the Farcaster network every time a new NounsDAO proposal is created.
 
 ```typescript
-import BotSwarm, { NounsDAOLogicV3 } from "@federationwtf/botswarm";
+import BotSwarm from "@federationwtf/botswarm";
+import { NounsDAOLogicV3 } from "@federationwtf/botswarm/contracts";
 
 const { watch, cast } = BotSwarm({
   NounsDAOLogicV3,
