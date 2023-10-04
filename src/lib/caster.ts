@@ -13,7 +13,7 @@ export default function caster(
       if (!client) throw new Error(missingMnemonicError);
 
       // TODO: Add channel support to farcaster-js
-      if (options?.channel) return client.publishCast(text, options.channel);
+      if (options?.channel) return client.publishCast(text);
 
       return client.publishCast(text);
     } catch (error) {

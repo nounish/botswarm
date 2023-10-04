@@ -38,22 +38,30 @@ const bot = BotSwarm({
 })
 ```
 
-We provide some premade contracts from [Federation](https://github.com/nounish/federation-protocol) and [NounsDAO](https://github.com/nounsDAO/nouns-monorepo/tree/master/packages/nouns-contracts)
+We provide some premade contracts from [Federation](https://github.com/nounish/federation-protocol) and [Nouns](https://github.com/nounsDAO/nouns-monorepo/tree/master/packages/nouns-contracts)
 
 ```typescript
 import BotSwarm {
   // Federation
   FederationNounsPool,
-  FederationNounsGovernor,
-  FederationNounsRelayer,
 
-  // NounsDAO
-  NounsDAOLogicV2
+  // Nouns
+  NounsDAOLogicV3,
+  NounsAuctionHouse,
+  NounsDAOExecutor,
+  NounsDescriptor,
+  NounsSeeder,
+  NounsToken
 } from "@federationwtf/botswarm";
 
 const bot = BotSwarm({
   FederationNounsPool,
-  NounsDAOLogicV2
+  NounsDAOLogicV3,
+  NounsAuctionHouse,
+  NounsDAOExecutor,
+  NounsDescriptor,
+  NounsSeeder,
+  NounsToken
 });
 ```
 
@@ -142,7 +150,7 @@ The write function also includes gas related options that can be overriden for m
 
 ```typescript
 const hash = await write({
-  contract: "NounsPool",
+  contract: "FederationNounsPool",
   chain: "mainnet",
   functionName: "castVote",
   args: [325],
@@ -154,7 +162,7 @@ const hash = await write({
 
 ## Scheduling tasks
 
-Tasks are specified contract calls to be executed after a given block. To add a task call `addTask` which takes in a block number contract call details which mimic the parameters of the `write` function used above. BotSwarm will watch the specified chain and call the `write` function when the current block is >= the block passed into `addTask`. Below is an example of [our implementation](https://github.com/nounish/federation-bot) of this to cast a NounsPool vote result to NounsDAO before the proposal ends. 
+Tasks are specified contract calls to be executed after a given block. To add a task call `addTask` which takes in a block number contract call details which mimic the parameters of the `write` function used above. BotSwarm will watch the specified chain and call the `write` function when the current block is >= the block passed into `addTask`. Below is an example of [our implementation](https://github.com/nounish/federation-bot) of this to cast a FederationNounsPool vote result to NounsDAO before the proposal ends. 
 
 If task execution fails then BotSwarm will make a second attempt and reschedule it a few blocks after. If the execution fails a second time then the task will be removed from the queue.
 
@@ -163,12 +171,12 @@ All tasks are cached to `.botswarm/cache.txt` when added or removed. BotSwarm wi
 ```typescript
 import BotSwarm {
   FederationNounsPool,
-  NounsDAOLogicV2
+  NounsDAOLogicV3
 } from "@federationwtf/botswarm";
 
 const { addTask, watch, read } = BotSwarm({
   FederationNounsPool,
-  NounsDAOLogicV2
+  NounsDAOLogicV3
 });
 
 watch(
@@ -183,7 +191,7 @@ watch(
     });
 
     const { endBlock } = await read({
-      contract: "NounsDAOLogicV2",
+      contract: "NounsDAOLogicV3",
       chain: "mainnet",
       functionName: "proposals",
       args: [event.args.propId],
@@ -205,7 +213,7 @@ Some usecases like MEV extraction might require that tasks execute as fast as po
 ```typescript
 addTask({
   block: endBlock - castWindow,
-  contract: "NounsPool",
+  contract: "FederationNounsPool",
   chain: "mainnet",
   functionName: "castVote",
   args: [event.args.propId],
@@ -227,15 +235,15 @@ FARCASTER_PHRASE="Your Farcaster mnemonic phrase"
 The example below casts to the Farcaster network every time a new NounsDAO proposal is created.
 
 ```typescript
-import BotSwarm, { NounsDAOLogicV2 } from "@federationwtf/botswarm";
+import BotSwarm, { NounsDAOLogicV3 } from "@federationwtf/botswarm";
 
 const { watch, cast } = BotSwarm({
-  NounsDAOLogicV2,
+  NounsDAOLogicV3,
 });
 
 watch(
   {
-    contract: "NounsDAOLogicV2",
+    contract: "NounsDAOLogicV3",
     chain: "mainnet",
     event: "ProposalCreated",
   },

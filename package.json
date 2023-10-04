@@ -3,12 +3,15 @@
   "version": "1.0.7",
   "description": "A typesafe library for scheduling onchain transactions",
   "type": "module",
-  "main": "src/index.js",
   "types": "src/index.d.ts",
   "scripts": {
     "build": "tsc && npm run fix-bug",
     "test": "vitest src",
     "fix-bug": "replace 'viem/node_modules/abitype' 'abitype' dist/src/BotSwarm.d.ts dist/src/utils/createConfig.d.ts"
+  },
+  "exports": {
+    ".": "./src/index.js",
+    "./contracts": "./src/contracts/index.js"
   },
   "dependencies": {
     "@standard-crypto/farcaster-js": "^5.6.0",
