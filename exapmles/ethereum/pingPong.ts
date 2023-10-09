@@ -1,4 +1,4 @@
-import BotSwarm from "../../src/BotSwarm.js";
+import BotSwarm from "@federationwtf/botswarm";
 
 const PingABI = [
   {
@@ -64,6 +64,12 @@ const { watch, write } = Ethereum({
     },
   },
   privateKey: process.env.ETHEREUM_PRIVATE_KEY as string,
+});
+
+write({
+  contract: "Ping",
+  chain: "sepolia",
+  functionName: "ping",
 });
 
 watch(

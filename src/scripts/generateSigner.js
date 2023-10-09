@@ -47,19 +47,15 @@ const wallet = Wallet.fromPhrase(
 );
 const eip712Signer = new EthersEip712Signer(wallet);
 
-// const client = getSSLHubRpcClient("hyena-charmed-monthly.ngrok-free.app:2283");
-// const client = getSSLHubRpcClient("129e9b.hubs.neynar.com:2283");
 const client = getSSLHubRpcClient("localhost:2283");
-// const response = await fetch(
-//   `https://fnames.farcaster.xyz/transfers?name=${answers.handle.replace(
-//     "@",
-//     ""
-//   )}`
-// );
 
-// console.log(await response.json(), (await response.json())[0]);
+const handle = "testing";
 
-// const fid = (await response.json())[0].to;
+const response = await fetch(
+  `https://fnames.farcaster.xyz/transfers?name=${handle.replace("@", "")}`
+);
+
+const fid = (await response.json()).transfers[0].to;
 
 const signerAddResult = await makeSignerAdd(
   { signer: signerPublicKey.value },

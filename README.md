@@ -9,9 +9,13 @@
 
 # Getting Started
 
-BotSwarm is a typesafe library for scheduling onchain transactions.
+BotSwarm is a typesafe library for scheduling onchain transactions. It also includes tools for creating [Farcaster](https://www.farcaster.xyz/) bots that can react to events emitted by smart contracts.
 
-To get started you can either clone [our implementation of BotSwarm](https://github.com/nounish/federation-bot) or follow along with the steps below.
+To get started you can 
+
+- Clone [our implementation of BotSwarm](https://github.com/nounish/federation-bot)
+- Check out some [examples](https://github.com/nounish/botswarm/blob/main/examples)
+- Follow along with the documentation below
 
 ## Installation
 
