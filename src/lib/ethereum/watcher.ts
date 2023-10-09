@@ -1,12 +1,14 @@
-import { Client, Contract, Chain } from "../utils/createConfig.js";
-import {
+import type {
   ExtractAbiFunctionNames,
   ExtractAbiEventNames,
   ExtractAbiEvents,
   ExtractAbiFunction,
   AbiParametersToPrimitiveTypes,
+  AbiEvent,
 } from "abitype";
-import { Address, Log, ReadContractReturnType } from "viem";
+import type { Address, Log, ReadContractReturnType } from "viem";
+import type { MaybeAbiEventName } from "viem/_types/types/contract.js";
+import type { Contract, EthereumChains, EthereumClient } from ".";
 
 type OnBlockCallback = (block: bigint) => void;
 
@@ -14,21 +16,38 @@ type ExtractEvent<TEvents, TName> = TEvents extends { name: TName }
   ? TEvents
   : never;
 
-export default function watcher<TContracts extends Record<string, Contract>>(
-  contracts: TContracts,
-  clients: Record<string, Client>
-) {
+export default function watcher<
+  TContracts extends Record<string, Contract>
+>(watcherConfig: {
+  contracts: TContracts;
+  ethereumClients: Record<string, EthereumClient>;
+}) {
   let onBlockListeners: Record<string, OnBlockCallback[]> = {};
 
   function onBlock(chain: string, callback: OnBlockCallback) {
     if (!onBlockListeners[chain]) onBlockListeners[chain] = [];
     onBlockListeners[chain].push(callback);
   }
-
+  type DefinitelyDefined<T> = {
+    [K in keyof T]-?: Exclude<T[K], undefined>;
+  };
   function watch<
     TContract extends keyof TContracts,
     TChain extends keyof TContracts[TContract]["deployments"],
-    TEventName extends ExtractAbiEventNames<TContracts[TContract]["abi"]>
+    TEventName extends ExtractAbiEventNames<TContracts[TContract]["abi"]>,
+    TEvent extends ExtractEvent<
+      ExtractAbiEvents<TContracts[TContract]["abi"]>,
+      TEventName
+    >,
+    TLog extends Log<
+      bigint,
+      number,
+      false,
+      TEvent,
+      undefined,
+      TEvent extends AbiEvent ? [TEvent] : undefined,
+      MaybeAbiEventName<TEvent>
+    >
   >(
     config: {
       contract: TContract;
@@ -36,36 +55,27 @@ export default function watcher<TContracts extends Record<string, Contract>>(
       event: TEventName;
     },
     callback: (
-      log: Log<
-        bigint,
-        number,
-        ExtractEvent<
-          ExtractAbiEvents<TContracts[TContract]["abi"]>,
-          TEventName
-        >,
-        undefined,
-        [
-          ExtractEvent<
-            ExtractAbiEvents<TContracts[TContract]["abi"]>,
-            TEventName
-          >
-        ]
-      >
+      log: Omit<TLog, "args"> & {
+        args: DefinitelyDefined<TLog["args"]>;
+      }
     ) => void
   ) {
-    const client = clients[config.chain as string];
-    const { deployments, abi } = contracts[config.contract];
+    const client = watcherConfig.ethereumClients[config.chain as string];
+    const { deployments, abi } = watcherConfig.contracts[config.contract];
 
     client.watchEvent({
-      address: deployments[config.chain as Chain] as Address,
+      address: deployments[config.chain as EthereumChains] as Address,
       event: abi.find(
         (item) => item.type === "event" && item.name === config.event
-      ) as ExtractEvent<
-        ExtractAbiEvents<TContracts[TContract]["abi"]>,
-        TEventName
-      >,
+      ) as TEvent,
       onLogs: (logs) => {
         for (const log of logs) {
+          /*
+            According to typescript, these two types are not the same...   
+            - Log<bigint, number, false, TEvent, undefined, TEvent extends AbiEvent ? [TEvent] : undefined, MaybeAbiEventName<TEvent>>
+            - Log<bigint, number, false, TEvent, undefined, TEvent extends AbiEvent ? [TEvent] : undefined, MaybeAbiEventName<TEvent>>
+          */
+          // @ts-ignore
           callback(log);
         }
       },
@@ -88,11 +98,11 @@ export default function watcher<TContracts extends Record<string, Contract>>(
     functionName: TFunctionName;
     args?: TArgs;
   }) {
-    const client = clients[config.chain as string];
-    const { deployments, abi } = contracts[config.contract];
+    const client = watcherConfig.ethereumClients[config.chain as string];
+    const { deployments, abi } = watcherConfig.contracts[config.contract];
 
     return client.readContract({
-      address: deployments[config.chain as Chain] as Address,
+      address: deployments[config.chain as EthereumChains] as Address,
       abi,
       functionName: config.functionName as string,
       args: config.args as any,
@@ -101,7 +111,7 @@ export default function watcher<TContracts extends Record<string, Contract>>(
     >;
   }
 
-  for (const [chain, client] of Object.entries(clients)) {
+  for (const [chain, client] of Object.entries(watcherConfig.ethereumClients)) {
     client.watchBlockNumber({
       onBlockNumber: async (block) => {
         for (const blockListener of onBlockListeners[chain]) {

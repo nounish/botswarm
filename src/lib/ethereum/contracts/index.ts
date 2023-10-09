@@ -1,5 +1,3 @@
-import { Contract } from "../utils/createConfig";
-
 // Federation
 import FederationNounsPoolABI from "./abi/federation/NounsPool";
 import FederationNounsGovernorABI from "./abi/federation/NounsGovernor";
@@ -12,6 +10,8 @@ import NounsAuctionHouseABI from "./abi/nouns/NounsAuctionHouse";
 import NounsSeederABI from "./abi/nouns/NounsSeeder";
 import NounsDescriptorABI from "./abi/nouns/NounsDescriptor";
 import NounsDAOExecutorV2ABI from "./abi/nouns/NounsDAOExecutorV2";
+
+import type { Contract } from "../";
 
 // Federation
 

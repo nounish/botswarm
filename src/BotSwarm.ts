@@ -1,128 +1,37 @@
-import executor from "./lib/executor.js";
-import scheduler from "./lib/scheduler.js";
-import watcher from "./lib/watcher.js";
-import caster from "./lib/caster.js";
-import { start } from "./lib/logger.js";
-import createConfig, { RPCs, Contract } from "./utils/createConfig.js";
+import createEthereum from "./lib/ethereum";
 import type _ from "viem/node_modules/abitype";
+import logger from "./lib/logger";
+import createFarcaster from "./lib/farcaster";
+import dotenv from "dotenv";
+import cacher from "./lib/cacher";
+dotenv.config();
 
-export default function BotSwarm<TContracts extends Record<string, Contract>>(
-  contracts: TContracts,
-  config?: {
-    cache?: boolean;
-    log?: boolean;
-    rpcs?: RPCs;
-    gasLimitBuffer?: number;
-    blockExecutionBuffer?: number;
-  }
-) {
-  const options = {
-    cache: true,
+export type BotSwarmConfig = { log: boolean };
+
+export default function BotSwarm(config?: { log: BotSwarmConfig["log"] }) {
+  const botswarmConfig = {
     log: true,
-    rpcs: {
-      mainnet: "https://rpc.flashbots.net/",
-    },
-    gasLimitBuffer: 30000,
-    blockExecutionBuffer: 0,
     ...config,
-  };
+  } satisfies BotSwarmConfig;
 
-  if (options.log) start();
+  const { success, warn, error, active, colors } = logger(botswarmConfig);
 
-  const { clients, wallets, farcasterAccount, farcasterClient } = createConfig(
-    contracts,
-    options.rpcs
+  const { cache, load, clear } = cacher({ success, warn, error, active });
+
+  const Ethereum = createEthereum(
+    { ...botswarmConfig },
+    { success, warn, error, active },
+    { cache, load, clear }
   );
 
-  const {
-    tasks,
-    rescheduled,
-    addTask,
-    getTask,
-    removeTask,
-    rescheduleTask,
-    cacheTasks,
-  } = scheduler(contracts, { cache: options.cache, log: options.log });
-  const { execute, executing, write } = executor(contracts, clients, wallets, {
-    gasLimitBuffer: options.gasLimitBuffer,
-  });
-  const { onBlock, watch, read } = watcher(contracts, clients);
-  const {
-    cast,
-    deleteCast,
-    reply,
-    recast,
-    removeRecast,
-    like,
-    removeLike,
-    watchCast,
-    unwatchCast,
-    followUser,
-    unfollowUser,
-  } = caster(farcasterClient, {
-    log: options.log,
-  });
-
-  for (const chain in clients) {
-    onBlock(chain, async (block) => {
-      for (const task of tasks()) {
-        if (
-          task.chain === chain &&
-          task.block <= block + BigInt(options.blockExecutionBuffer) &&
-          !executing()[task.id]
-        ) {
-          const success = await execute(task);
-
-          if (success) {
-            removeTask(task.id);
-            continue;
-          }
-
-          if (rescheduled()[task.id]) {
-            removeTask(task.id);
-            continue;
-          }
-
-          rescheduleTask(task.id, block + 5n, true);
-        }
-      }
-    });
-  }
+  const Farcaster = createFarcaster(
+    { ...botswarmConfig },
+    { success, warn, error, active }
+  );
 
   return {
-    // Config
-    clients,
-    wallets,
-    farcasterAccount,
-    farcasterClient,
-    contracts,
-    // Scheduler
-    tasks,
-    rescheduled,
-    addTask,
-    getTask,
-    removeTask,
-    rescheduleTask,
-    cacheTasks,
-    // Executor
-    execute,
-    executing,
-    write,
-    // Watcher
-    onBlock,
-    watch,
-    read,
-    // Caster
-    cast,
-    deleteCast,
-    reply,
-    recast,
-    removeRecast,
-    like,
-    removeLike,
-    watchCast,
-    unwatchCast,
-    followUser,
-    unfollowUser,
+    Ethereum,
+    Farcaster,
+    log: { success, warn, error, active, colors },
   };
 }

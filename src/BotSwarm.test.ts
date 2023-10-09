@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import BotSwarm from "./index.js";
 
 describe("BotSwarm", () => {
-  const { tasks, addTask, getTask, rescheduleTask, removeTask } = BotSwarm(
-    {
+  const { Ethereum, Farcaster } = BotSwarm({ log: false });
+
+  const { tasks, addTask, getTask, rescheduleTask, removeTask } = Ethereum({
+    contracts: {
       TestContract: {
         abi: [
           {
@@ -19,8 +21,9 @@ describe("BotSwarm", () => {
         },
       },
     },
-    { cache: false, log: false }
-  );
+    privateKey: process.env.ETHEREUM_PRIVATE_KEY as string,
+    cacheTasks: false,
+  });
 
   const task = {
     block: 99999999999999999999n,

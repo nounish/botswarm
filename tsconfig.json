@@ -17,6 +17,11 @@
     "outDir": "dist",
     "rootDir": "./"
   },
-  "include": ["src/**/*.ts"],
+  "include": [
+    "src/**/*.ts",
+    "src/scripts/generate.js",
+    "src/scripts/link.js",
+    "src/scripts/link.js"
+  ],
   "exclude": ["**/*.test.ts"]
 }

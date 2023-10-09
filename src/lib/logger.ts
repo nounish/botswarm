@@ -2,47 +2,75 @@ import colors from "kleur";
 import figlet from "figlet";
 import details from "../../package.json" assert { type: "json" };
 import { createSpinner } from "nanospinner";
-
-let state = createSpinner();
-
-const defaultMessage = "Waiting for tasks";
+import { BotSwarmConfig } from "../BotSwarm";
 
 export { colors };
 
-export function start() {
-  console.log(
-    figlet.textSync("BotSwarm", {
-      font: "ANSI Shadow",
-      horizontalLayout: "default",
-      verticalLayout: "default",
-      width: 80,
-      whitespaceBreak: true,
-    })
-  );
+export type Logger = Omit<ReturnType<typeof logger>, "colors">;
 
-  console.log(colors.blue(details.description));
-  console.log(`\nVersion: ${colors.magenta(details.version)}\n`);
+export default function logger(botswarmConfig: BotSwarmConfig) {
+  let state = createSpinner();
 
-  state.start({ text: defaultMessage });
-}
+  const defaultMessage = "Waiting for tasks";
 
-export function success(message: string) {
-  state.success({
-    text: message,
-  });
-  state = createSpinner(defaultMessage).start();
-}
+  if (botswarmConfig.log) {
+    console.log(
+      figlet.textSync("BotSwarm", {
+        font: "ANSI Shadow",
+        horizontalLayout: "default",
+        verticalLayout: "default",
+        width: 80,
+        whitespaceBreak: true,
+      })
+    );
 
-export function error(message: string) {
-  state.error({
-    text: message,
-  });
-  state = createSpinner(defaultMessage).start();
-}
+    console.log(colors.blue(details.description));
+    console.log(`\nVersion: ${colors.magenta(details.version)}\n`);
 
-export function active(message: string) {
-  state.update({
-    text: message,
-    color: "blue",
-  });
+    state.start({ text: defaultMessage });
+  }
+
+  function success(message: string) {
+    if (botswarmConfig.log) {
+      state.success({
+        text: message,
+      });
+      state = createSpinner(defaultMessage).start();
+    }
+  }
+
+  function warn(message: string) {
+    if (botswarmConfig.log) {
+      state.warn({
+        text: message,
+      });
+      state = createSpinner(defaultMessage).start();
+    }
+  }
+
+  function error(message: string) {
+    if (botswarmConfig.log) {
+      state.error({
+        text: message,
+      });
+      state = createSpinner(defaultMessage).start();
+    }
+  }
+
+  function active(message: string) {
+    if (botswarmConfig.log) {
+      state.update({
+        text: message,
+        color: "blue",
+      });
+    }
+  }
+
+  return {
+    success,
+    warn,
+    error,
+    active,
+    colors,
+  };
 }

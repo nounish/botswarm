@@ -1,29 +1,21 @@
 import BotSwarm from "./BotSwarm.js";
 
-import type {
-  Contract,
-  Wallet,
-  Client,
-  Chain,
-  FarcasterClient,
-  FarcasterAccount,
-} from "./utils/createConfig.js";
-import type { Task } from "./lib/scheduler.js";
-import type { Cast } from "@standard-crypto/farcaster-js";
-
-import { success, error, active } from "./lib/logger.js";
-
+// BotSwarm
 export default BotSwarm;
 
-export const log = { success, error, active };
-
+// Types
 export type {
+  EthereumWallet,
+  EthereumClient,
   Contract,
-  Wallet,
-  Client,
+  EthereumChains,
+} from "./lib/ethereum/index.js";
+export type {
   FarcasterClient,
-  FarcasterAccount,
-  Task,
-  Chain,
+  FarcasterSigner,
+  FarcasterNetworks,
+  Channel,
   Cast,
-};
+  Reaction,
+} from "./lib/farcaster/index.js";
+export type { Task } from "./lib/ethereum/scheduler.js";
