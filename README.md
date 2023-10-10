@@ -25,6 +25,20 @@ Create a new NPM project and run
 npm i @federationwtf/botswarm
 ```
 
+- [Configuration](#configuration)
+- [Usage](#usage) 
+  - [Ethereum](#ethereum)
+    - [Reacting to onchain events](#reacting-to-onchain-events)
+    - [Read and writing to contracts](#read-and-writing-to-contracts)
+    - [Scheduling tasks](#scheduling-tasks)
+    - [Usage with Viem](#usage-with-viem)
+  - [Farcaster](#farcaster)
+    - [Casting](#casting)
+    - [Reacting](#reacting)
+    - [Update Profile](#update-profile)
+- [Logging](#logging)
+- [Full BotSwarm API](#full-botswarm-api)
+
 ## Configuration
 
 To initialize BotSwarm, simply call the BotSwarm function with an optional config.
