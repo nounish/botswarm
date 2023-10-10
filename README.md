@@ -17,14 +17,6 @@ To get started you can
 - Check out some [examples](https://github.com/nounish/botswarm/blob/main/examples)
 - Follow along with the documentation below
 
-## Installation
-
-Create a new NPM project and run
-
-```bash
-npm i @federationwtf/botswarm
-```
-
 - [Configuration](#configuration)
 - [Usage](#usage) 
   - [Ethereum](#ethereum)
@@ -38,6 +30,14 @@ npm i @federationwtf/botswarm
     - [Update Profile](#update-profile)
 - [Logging](#logging)
 - [Full BotSwarm API](#full-botswarm-api)
+
+## Installation
+
+Create a new NPM project and run
+
+```bash
+npm i @federationwtf/botswarm
+```
 
 ## Configuration
 
