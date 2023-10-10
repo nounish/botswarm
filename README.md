@@ -17,6 +17,8 @@ To get started you can
 - Check out some [examples](https://github.com/nounish/botswarm/blob/main/examples)
 - Follow along with the documentation below
 
+Documentation
+
 - [Configuration](#configuration)
 - [Usage](#usage) 
   - [Ethereum](#ethereum)
