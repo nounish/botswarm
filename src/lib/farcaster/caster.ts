@@ -2,6 +2,7 @@ import {
   makeCastAdd,
   makeCastRemove,
   makeReactionAdd,
+  makeReactionRemove,
   makeUserDataAdd,
   ReactionType,
   UserDataType,
@@ -28,7 +29,6 @@ export default function caster(
     text: string,
     options?: {
       embeds?: CastAddBody["embeds"];
-      embedsDeprecated?: CastAddBody["embedsDeprecated"];
       mentions?: CastAddBody["mentions"];
       mentionsPositions?: CastAddBody["mentionsPositions"];
       channel?: Channel | string;
@@ -43,7 +43,7 @@ export default function caster(
       {
         text,
         embeds: options?.embeds ?? [],
-        embedsDeprecated: options?.embedsDeprecated ?? [],
+        embedsDeprecated: [],
         mentions: options?.mentions ?? [],
         mentionsPositions: options?.mentionsPositions ?? [],
         parentUrl,
@@ -102,7 +102,6 @@ export default function caster(
     cast: Cast,
     options?: {
       embeds?: CastAddBody["embeds"];
-      embedsDeprecated?: CastAddBody["embedsDeprecated"];
       mentions?: CastAddBody["mentions"];
       mentionsPositions?: CastAddBody["mentionsPositions"];
     }
@@ -111,7 +110,7 @@ export default function caster(
       {
         text,
         embeds: options?.embeds ?? [],
-        embedsDeprecated: options?.embedsDeprecated ?? [],
+        embedsDeprecated: [],
         mentions: options?.mentions ?? [],
         mentionsPositions: options?.mentionsPositions ?? [],
         parentCastId: {
@@ -174,11 +173,42 @@ export default function caster(
     return true;
   }
 
+  async function removeReaction(cast: Cast, type: Reaction) {
+    const removeReaction = await makeReactionRemove(
+      {
+        type: ReactionType[type.toUpperCase() as Uppercase<Reaction>],
+        targetCastId: {
+          fid: cast.fid,
+          hash: cast.hash,
+        },
+      },
+      dataOptions,
+      casterConfig.farcasterSigner
+    );
+
+    if (removeReaction.isErr()) {
+      log.error(removeReaction.error.message);
+      return false;
+    }
+
+    const submitMessage = await casterConfig.farcasterClient.submitMessage(
+      removeReaction.value
+    );
+
+    if (submitMessage.isErr()) {
+      log.error(submitMessage.error.message);
+      return false;
+    }
+
+    return true;
+  }
+
   async function updateProfile(value: {
     pfp?: string;
     displayName?: string;
     bio?: string;
     url?: string;
+    username?: string;
   }) {
     if (value.pfp) {
       const addPfp = await makeUserDataAdd(
@@ -280,6 +310,31 @@ export default function caster(
       }
     }
 
+    if (value.username) {
+      const addUsername = await makeUserDataAdd(
+        {
+          type: UserDataType.USERNAME,
+          value: value.username,
+        },
+        dataOptions,
+        casterConfig.farcasterSigner
+      );
+
+      if (addUsername.isErr()) {
+        log.error(addUsername.error.message);
+        return false;
+      }
+
+      const submitMessage = await casterConfig.farcasterClient.submitMessage(
+        addUsername.value
+      );
+
+      if (submitMessage.isErr()) {
+        log.error(submitMessage.error.message);
+        return false;
+      }
+    }
+
     return true;
   }
 
@@ -288,6 +343,7 @@ export default function caster(
     removeCast,
     reply,
     react,
+    removeReaction,
     updateProfile,
   };
 }

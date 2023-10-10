@@ -33,5 +33,6 @@ export default function BotSwarm(config?: { log: BotSwarmConfig["log"] }) {
     Ethereum,
     Farcaster,
     log: { success, warn, error, active, colors },
+    cache: { save: cache, load, clear },
   };
 }

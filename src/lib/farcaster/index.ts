@@ -8,6 +8,7 @@ import {
 import { BotSwarmConfig } from "../../BotSwarm";
 import caster from "./caster";
 import { Logger } from "../logger";
+import * as ed from "@noble/ed25519";
 
 export type FarcasterSigner = NobleEd25519Signer;
 
@@ -34,7 +35,8 @@ export type Reaction = Lowercase<Exclude<keyof typeof ReactionType, "NONE">>;
 export type FarcasterConfig = {
   fid: number;
   signerPrivateKey: string;
-  rpc: { url: string; network: FarcasterNetworks };
+  network: FarcasterNetworks;
+  rpc: string;
 };
 
 export default function createFarcaster(
@@ -44,33 +46,35 @@ export default function createFarcaster(
   return (config: {
     fid: FarcasterConfig["fid"];
     signerPrivateKey: FarcasterConfig["signerPrivateKey"];
-    rpc?: FarcasterConfig["rpc"];
+    rpc: FarcasterConfig["rpc"];
+    network?: FarcasterConfig["network"];
   }) => {
     const farcasterConfig = {
-      rpc: { url: "testnet1.farcaster.xyz:2283", network: "testnet" },
+      network: "mainnet",
       ...config,
     } satisfies FarcasterConfig;
 
     let farcasterClient: FarcasterClient = getSSLHubRpcClient(
-      farcasterConfig.rpc.url
+      farcasterConfig.rpc
     );
 
     let farcasterSigner: FarcasterSigner = new NobleEd25519Signer(
-      Buffer.from(config.signerPrivateKey)
+      ed.etc.hexToBytes(config.signerPrivateKey)
     );
 
-    const { cast, removeCast, reply, react, updateProfile } = caster(
-      {
-        fid: farcasterConfig.fid,
-        network:
-          FarcasterNetwork[
-            farcasterConfig.rpc.network.toUpperCase() as Uppercase<FarcasterNetworks>
-          ],
-        farcasterClient,
-        farcasterSigner,
-      },
-      log
-    );
+    const { cast, removeCast, reply, react, removeReaction, updateProfile } =
+      caster(
+        {
+          fid: farcasterConfig.fid,
+          network:
+            FarcasterNetwork[
+              farcasterConfig.network.toUpperCase() as Uppercase<FarcasterNetworks>
+            ],
+          farcasterClient,
+          farcasterSigner,
+        },
+        log
+      );
 
     return {
       farcasterClient,
@@ -79,6 +83,7 @@ export default function createFarcaster(
       removeCast,
       reply,
       react,
+      removeReaction,
       updateProfile,
     };
   };
