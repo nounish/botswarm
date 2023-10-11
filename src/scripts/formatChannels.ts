@@ -1,4 +1,3 @@
-// @ts-check
 // Formats channel data from https://github.com/neynarxyz/farcaster-channels/blob/main/warpcast.json
 
 const data = [

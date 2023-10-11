@@ -293,6 +293,14 @@ const farcaster = Farcaster({
 });
 ```
 
+Note: The `signerPrivateKey` is not your Farcaster nmemonic phrase. It is the private key of a generated signer for your account. To generate a signer run this script and follow the instructions.
+
+```bash
+node node_modules/@federationwtf/botswarm/src/scripts/generateSigner.js
+```
+
+[Learn more about signers](https://docs.farcaster.xyz/protocol/concepts.html#signers)
+
 Check out [the full api](#full-botswarm-api) for all Farcaster features
 
 #### Casting

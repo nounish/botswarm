@@ -1,7 +1,3 @@
-#!/usr/bin/env node
-
-//@ts-check
-
 import * as ed from "@noble/ed25519";
 import { mnemonicToAccount } from "viem/accounts";
 import qrcode from "qrcode-terminal";

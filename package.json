@@ -1,16 +1,14 @@
 {
   "name": "@federationwtf/botswarm",
-  "version": "2.0.0",
+  "version": "2.0.2",
   "description": "A typesafe library for scheduling onchain transactions",
   "type": "module",
   "types": "src/index.d.ts",
-  "bin": {
-    "botswarm": "./src/scripts/generateSigner.js"
-  },
+  "bin": "./src/bin/generateSigner.js",
   "scripts": {
     "build": "tsc && npm run fix-bug",
     "test": "vitest src",
-    "fix-bug": "replace 'viem/node_modules/abitype' 'abitype' dist/src/BotSwarm.d.ts dist/src/utils/createConfig.d.ts"
+    "fix-bug": "replace 'viem/node_modules/abitype' 'abitype' dist/src/BotSwarm.d.ts dist/src/lib/ethereum/index.d.ts"
   },
   "exports": {
     ".": {
