@@ -1,22 +1,19 @@
-import { join } from "path";
-import { existsSync, writeFileSync, mkdirSync, readFileSync } from "fs";
-import { createHash } from "crypto";
-import { Contract, Chain } from "../utils/createConfig.js";
-import {
+import parseTaskIdentifier from "../../utils/parseTaskIdentifier.js";
+import type { Contract, EthereumChains } from "./index.js";
+import type {
   AbiParametersToPrimitiveTypes,
-  Address,
   ExtractAbiFunction,
   ExtractAbiFunctionNames,
 } from "abitype";
-import { active, colors, error, success } from "./logger.js";
-import { stringify, parse } from "../utils/customSerializer.js";
-import parseTaskIdentifier from "../utils/parseTaskIdentifier.js";
+import { Logger, colors } from "../logger.js";
+import { Cacher } from "../cacher.js";
+import hash from "../../utils/hash.js";
 
 export type Task = {
   id: string;
   block: bigint;
   contract: string;
-  chain: Chain;
+  chain: EthereumChains;
   functionName: string;
   args: any[];
   priorityFee: number | bigint;
@@ -24,32 +21,33 @@ export type Task = {
 };
 
 export default function scheduler<TContracts extends Record<string, Contract>>(
-  contracts: TContracts,
-  options: { cache: boolean; log: boolean }
+  schedulerConfig: {
+    contracts: TContracts;
+    cacheTasks: boolean;
+  },
+  log: Logger,
+  cacher: Cacher
 ) {
   let tasks: Array<Task> = [];
   let rescheduled: Record<string, boolean> = {};
 
-  if (options.cache) {
-    const cache = join(process.cwd(), ".botswarm", "cache.txt");
+  if (schedulerConfig.cacheTasks) {
+    log.active("Loading cached tasks");
 
-    if (existsSync(cache)) {
-      active("Loading cached tasks");
+    const _tasks: Array<Task> | undefined = cacher.load("tasks");
 
-      let _tasks: Array<Task> = parse(readFileSync(cache, "utf-8"));
-      tasks = _tasks;
+    if (_tasks) tasks = _tasks;
 
-      for (const task of _tasks) {
-        const identifier = parseTaskIdentifier(task);
-        success(
-          `Cached task ${identifier} rescheduled for block ${colors.yellow(
-            Number(task.block)
-          )}`
-        );
-      }
-
-      success("Finished syncing cached tasks");
+    for (const task of tasks) {
+      const identifier = parseTaskIdentifier(task);
+      log.success(
+        `Cached task ${identifier} rescheduled for block ${colors.yellow(
+          Number(task.block)
+        )}`
+      );
     }
+
+    log.success("Finished syncing cached tasks");
   }
 
   function addTask<
@@ -72,11 +70,11 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
     maxBaseFeeForPriority?: number | bigint;
   }) {
     const task: Task = {
-      id: createHash("sha256").update(stringify(config)).digest("hex"),
+      id: hash(config),
       block:
         typeof config.block === "number" ? BigInt(config.block) : config.block,
       contract: config.contract as string,
-      chain: config.chain as Chain,
+      chain: config.chain as EthereumChains,
       functionName: config.functionName,
       args: config.args as any,
       priorityFee: config.priorityFee ?? 0,
@@ -85,29 +83,23 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
 
     const identifier = parseTaskIdentifier(task);
 
-    if (options.log) {
-      active(`Adding task ${identifier}`);
-    }
+    log.active(`Adding task ${identifier}`);
 
     if (tasks.find((_task) => _task.id === task.id)) {
-      if (options.log) {
-        error(`Failed to add task ${identifier} already exists`);
-      }
+      log.error(`Failed to add task ${identifier} already exists`);
 
       return false;
     }
 
     tasks.push(task);
 
-    if (options.cache) cacheTasks();
+    if (schedulerConfig.cacheTasks) cacher.cache("tasks", tasks);
 
-    if (options.log) {
-      success(
-        `Sucessfully added task ${identifier} for block ${colors.yellow(
-          Number(config.block)
-        )}`
-      );
-    }
+    log.success(
+      `Sucessfully added task ${identifier} for block ${colors.yellow(
+        Number(config.block)
+      )}`
+    );
 
     return true;
   }
@@ -115,8 +107,8 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
   function getTask(id: string) {
     const task = tasks.find((task) => task.id === id);
 
-    if (!task && options.log) {
-      error(`Could not find task with id ${id}`);
+    if (!task) {
+      log.error(`Could not find task with id ${id}`);
     }
 
     return task;
@@ -129,19 +121,16 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
     const identifier = parseTaskIdentifier(task);
 
     if (index === -1) {
-      if (options.log) {
-        error(`Failed to remove task ${identifier} does not exist`);
-      }
+      log.error(`Failed to remove task ${identifier} does not exist`);
+
       return false;
     }
 
     tasks.splice(index, 1);
 
-    if (options.cache) cacheTasks();
+    if (schedulerConfig.cacheTasks) cacher.cache("tasks", tasks);
 
-    if (options.log) {
-      success(`Sucessfully removed task ${identifier}`);
-    }
+    log.success(`Sucessfully removed task ${identifier}`);
 
     return true;
   }
@@ -157,9 +146,8 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
     const identifier = parseTaskIdentifier(task);
 
     if (index === -1) {
-      if (options.log) {
-        error(`Failed to reschedule task ${identifier} does not exist`);
-      }
+      log.error(`Failed to reschedule task ${identifier} does not exist`);
+
       return false;
     }
 
@@ -167,27 +155,15 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
 
     if (flagAsRescheduled) rescheduled[id] = true;
 
-    if (options.cache) cacheTasks();
+    if (schedulerConfig.cacheTasks) cacher.cache("tasks", tasks);
 
-    if (options.log) {
-      success(
-        `Sucessfully rescheduled task ${identifier} for block ${colors.yellow(
-          Number(task.block)
-        )}`
-      );
-    }
+    log.success(
+      `Sucessfully rescheduled task ${identifier} for block ${colors.yellow(
+        Number(task.block)
+      )}`
+    );
 
     return true;
-  }
-
-  function cacheTasks() {
-    const directory = join(process.cwd(), ".botswarm");
-
-    if (!existsSync(directory)) {
-      mkdirSync(directory, { recursive: true });
-    }
-
-    writeFileSync(join(directory, "cache.txt"), stringify(tasks));
   }
 
   return {
@@ -196,7 +172,7 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
     addTask,
     getTask,
     removeTask,
-    cacheTasks,
+    cacheTasks: () => cacher.cache("tasks", tasks),
     rescheduleTask,
   };
 }

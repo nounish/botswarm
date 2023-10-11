@@ -17,6 +17,6 @@
     "outDir": "dist",
     "rootDir": "./"
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["**/*.test.ts"]
+  "include": ["src/**/*"],
+  "exclude": ["**/*.test.ts", "src/scripts/formatChannels.ts"]
 }

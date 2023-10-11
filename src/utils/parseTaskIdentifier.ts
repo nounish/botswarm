@@ -1,5 +1,5 @@
 import { colors } from "../lib/logger.js";
-import { Task } from "../lib/scheduler.js";
+import { Task } from "../lib/ethereum/scheduler.js";
 
 export default function parseTaskIdentifier(task: Task) {
   return `${colors.green(task.contract)}:${colors.blue(

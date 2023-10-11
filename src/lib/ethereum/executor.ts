@@ -1,24 +1,28 @@
-import { Task } from "./scheduler.js";
-import {
+import { parseGwei, BaseError, ContractFunctionRevertedError } from "viem";
+import parseTaskIdentifier from "../../utils/parseTaskIdentifier.js";
+import type {
+  Contract,
+  EthereumChains,
+  EthereumClient,
+  EthereumWallet,
+} from "./index.js";
+import type { Task } from "./scheduler.js";
+import type {
   AbiParametersToPrimitiveTypes,
   ExtractAbiFunction,
   ExtractAbiFunctionNames,
 } from "abitype";
-import { Chain, Contract, Wallet, Client } from "../utils/createConfig.js";
-import {
-  Address,
-  BaseError,
-  ContractFunctionRevertedError,
-  parseGwei,
-} from "viem";
-import { active, colors, error, success } from "./logger.js";
-import parseTaskIdentifier from "../utils/parseTaskIdentifier.js";
+import type { Address } from "viem";
+import { Logger, colors } from "../logger.js";
 
 export default function executor<TContracts extends Record<string, Contract>>(
-  contracts: TContracts,
-  clients: Record<string, Client>,
-  wallets: Record<string, Wallet>,
-  options: { gasLimitBuffer: number | bigint }
+  executorConfig: {
+    contracts: TContracts;
+    ethereumClients: Record<string, EthereumClient>;
+    ethereumWallets: Record<string, EthereumWallet>;
+    gasLimitBuffer: number | bigint;
+  },
+  log: Logger
 ) {
   let executing: Record<string, boolean> = {};
 
@@ -28,9 +32,9 @@ export default function executor<TContracts extends Record<string, Contract>>(
 
       const identifier = parseTaskIdentifier(task);
 
-      active(`Executing task ${identifier}`);
+      log.active(`Executing task ${identifier}`);
 
-      const client = clients[task.chain];
+      const client = executorConfig.ethereumClients[task.chain];
 
       const { baseFeePerGas } = await client.getBlock();
 
@@ -47,7 +51,7 @@ export default function executor<TContracts extends Record<string, Contract>>(
 
       const hash = await write({
         contract: task.contract,
-        chain: task.chain,
+        chain: task.chain as any,
         functionName: task.functionName,
         args: task.args as any,
         maxPriorityFeePerGas: priorityFee,
@@ -58,29 +62,34 @@ export default function executor<TContracts extends Record<string, Contract>>(
         throw new Error("Failed to execute task");
       }
 
-      const receipt = await client.waitForTransactionReceipt({ hash, timeout: 120_000 });
+      const receipt = await client.waitForTransactionReceipt({
+        hash,
+        timeout: 120_000,
+      });
 
       if (receipt.status === "reverted") {
-        error(`
+        log.error(`
         Task ${identifier} reverted: {
           hash: ${colors.magenta(receipt.transactionHash)},
           chain: ${colors.magenta(task.chain)},
           block: ${colors.magenta(Number(receipt.blockNumber))},
           contract: ${colors.magenta(
-            contracts[task.contract].deployments[task.chain] as string
+            executorConfig.contracts[task.contract].deployments[
+              task.chain
+            ] as string
           )},
           function: ${colors.magenta(task.functionName)},
         }        
         `);
       }
 
-      success(`Task ${identifier} executed sucessfully`);
+      log.success(`Task ${identifier} executed sucessfully`);
 
       return true;
     } catch (e) {
       executing[task.id] = false;
 
-      error(e as string);
+      log.error(e as string);
 
       return false;
     }
@@ -106,15 +115,15 @@ export default function executor<TContracts extends Record<string, Contract>>(
     gasLimit?: bigint | number;
   }) {
     try {
-      const client = clients[config.chain as string];
-      const wallet = wallets[config.chain as string];
+      const client = executorConfig.ethereumClients[config.chain as string];
+      const wallet = executorConfig.ethereumWallets[config.chain as string];
 
-      const { deployments, abi } = contracts[config.contract];
+      const { deployments, abi } = executorConfig.contracts[config.contract];
 
       const gasLimit =
         config.gasLimit ??
         (await client.estimateContractGas({
-          address: deployments[config.chain as Chain] as Address,
+          address: deployments[config.chain as EthereumChains] as Address,
           abi,
           functionName: config.functionName as string,
           args: config.args as any,
@@ -129,7 +138,7 @@ export default function executor<TContracts extends Record<string, Contract>>(
 
       const { request } = await client.simulateContract({
         account: wallet.account,
-        address: deployments[config.chain as Chain] as Address,
+        address: deployments[config.chain as EthereumChains] as Address,
         abi,
         functionName: config.functionName as string,
         args: config.args as any,
@@ -139,7 +148,7 @@ export default function executor<TContracts extends Record<string, Contract>>(
         maxFeePerGas: config.maxFeePerGas
           ? BigInt(config.maxFeePerGas)
           : undefined,
-        gas: BigInt(gasLimit) + BigInt(options.gasLimitBuffer),
+        gas: BigInt(gasLimit) + BigInt(executorConfig.gasLimitBuffer),
       });
 
       return wallet.writeContract(request);
@@ -148,8 +157,8 @@ export default function executor<TContracts extends Record<string, Contract>>(
         e instanceof BaseError &&
         e.cause instanceof ContractFunctionRevertedError
       ) {
-        error(`${e.cause.data?.errorName}: ${e.cause.message}`);
-      } else error(e as string);
+        log.error(`${e.cause.data?.errorName}: ${e.cause.message}`);
+      } else log.error(e as string);
     }
   }
 
