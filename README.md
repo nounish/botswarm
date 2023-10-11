@@ -29,7 +29,7 @@ BotSwarm is a typesafe library for scheduling onchain transactions. It also incl
 
 To get started you can 
 
-- Clone [our implementation of BotSwarm](https://github.com/nounish/federation-bot)
+- Clone [our implementation of BotSwarm](https://github.com/nounish/federation-bot/tree/dev)
 - Check out some [examples](https://github.com/nounish/botswarm/tree/main/examples)
 - Follow along with the documentation below
 
@@ -319,7 +319,7 @@ if (post) {
 const postInChannel = await cast("This casts to a channel", { channel: "channel" });
 ```
 
-We provide some built in popular channels from [Warpcast](https://warpcast.com/).
+We provide some built in popular channels from [Warpcast](https://github.com/neynarxyz/farcaster-channels).
 
 ```typescript
 import { Nouns } from "@federationwtf/botswarm/channels";
