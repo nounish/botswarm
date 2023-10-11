@@ -30,7 +30,7 @@ BotSwarm is a typesafe library for scheduling onchain transactions. It also incl
 To get started you can 
 
 - Clone [our implementation of BotSwarm](https://github.com/nounish/federation-bot)
-- Check out some [examples](https://github.com/nounish/botswarm/blob/main/examples)
+- Check out some [examples](https://github.com/nounish/botswarm/tree/main/examples)
 - Follow along with the documentation below
 
 ## Installation
