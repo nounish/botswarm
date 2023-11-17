@@ -15,6 +15,7 @@
     - [Reacting to onchain events](#reacting-to-onchain-events)
     - [Read and writing to contracts](#read-and-writing-to-contracts)
     - [Scheduling tasks](#scheduling-tasks)
+    - [Hooks](#execution-hooks)
     - [Usage with Viem](#usage-with-viem)
   - [Farcaster](#farcaster)
     - [Casting](#casting)
@@ -204,16 +205,19 @@ import {
   NounsDAOLogicV3 
 } from "@federationwtf/botswarm/contracts";
 
-const { addTask, watch, read } = BotSwarm({
-  FederationNounsPool,
-  NounsDAOLogicV3
+const { Ethereum } = BotSwarm();
+
+const { addTask, read, watch } = Ethereum({ 
+  contracts: {   
+    FederationNounsPool,
+    NounsDAOLogicV3 
+  },
+  privateKey: process.env.ETHEREUM_PRIVATE_KEY
 });
 
 watch(
   { contract: "FederationNounsPool", chain: "mainnet", event: "BidPlaced" },
   async (event) => {
-    if (!event.args.propId) return;
-
     const { castWindow } = await read({
       contract: "FederationNounsPool",
       chain: "mainnet",
@@ -251,6 +255,57 @@ addTask({
   maxBaseFeeForPriority: 25,
 });
 ```
+
+#### Execution Hooks
+
+Sometimes, there may be function arguments that need to be dynamically generated at time of exection. This could be because certain contract state needs to be retrieved at a block that didn't exist at the time of adding the task to the BotSwarm queue, or some other reason. To address this problem, BotSwarm provides a `hooks` property in the Ethereum adapter config which takes a key and a function (synchronous or asyncronous) that modifies and returns a task. These functions "hook" into the execution lifecycle of a task and are run prior to task exection.
+
+```typescript
+import BotSwarm from "@federationwtf/botswarm";
+import { NounsDAOLogicV3 } from "@federationwtf/botswarm/contracts";
+
+const { Ethereum } = BotSwarm();
+
+const { addTask, read, watch } = Ethereum({ 
+  contracts: {   
+    FederationNounsPool,
+    NounsDAOLogicV3 
+  },
+  hooks: {
+    getVoteSupport: async (task, block) => {
+      const support = block % 2 === 0 ? 0 : 1;
+
+      task.args.push(support);
+
+      return task;
+    }
+  },
+  privateKey: process.env.ETHEREUM_PRIVATE_KEY
+});
+
+watch(
+  { contract: "NounsDAOLogicV3", chain: "mainnet", event: "VoteCast" },
+  async (event) => {
+    const { endBlock } = await read({
+      contract: "NounsDAOLogicV3",
+      chain: "mainnet",
+      functionName: "proposals",
+      args: [event.args.proposalId],
+    });
+
+    addTask({
+      block: endBlock - 100,
+      hooks: ["getVoteSupport"],
+      contract: "NounsDAOLogicV3",
+      chain: "mainnet",
+      functionName: "castVote",
+      args: [event.args.proposalId],
+    });
+  }
+);
+```
+
+In this example the `getVoteSupport` function gets called right before the `castVote` task executes adding the support argument based on whether or not the current block is even or odd. The function args in the transaction will be `[event.args.proposalId, support]` when broadcasted to the network.
 
 #### Usage with Viem
 
@@ -403,8 +458,8 @@ const {
 } = BotSwarm({ ... });
 
 const {
-  ethereumClients, // Viem public clients for each chain
-  ethereumWallets, // Viem wallet clients for each chain
+  clients, // Viem public clients for each chain
+  wallets, // Viem wallet clients for each chain
   contracts: config.contracts, // User defined contracts
   tasks, // Tasks that are currently executing
   rescheduled, // Tasks that have been rescheduled
@@ -422,8 +477,8 @@ const {
 } = Ethereum({ ... });
 
 const {
-  farcasterClient, // The Farcaster client
-  farcasterSigner, // The Farcaster signer
+  client, // The Farcaster client
+  signer, // The Farcaster signer
   cast, // Cast to Farcaster 
   removeCast, // Remove a cast
   reply, // Reply to a cast

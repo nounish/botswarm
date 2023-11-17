@@ -18,8 +18,8 @@ import { Logger, colors } from "../logger.js";
 export default function executor<TContracts extends Record<string, Contract>>(
   executorConfig: {
     contracts: TContracts;
-    ethereumClients: Record<string, EthereumClient>;
-    ethereumWallets: Record<string, EthereumWallet>;
+    clients: Record<string, EthereumClient>;
+    wallets: Record<string, EthereumWallet>;
     gasLimitBuffer: number | bigint;
   },
   log: Logger
@@ -34,7 +34,7 @@ export default function executor<TContracts extends Record<string, Contract>>(
 
       log.active(`Executing task ${identifier}`);
 
-      const client = executorConfig.ethereumClients[task.chain];
+      const client = executorConfig.clients[task.chain];
 
       const { baseFeePerGas } = await client.getBlock();
 
@@ -56,6 +56,7 @@ export default function executor<TContracts extends Record<string, Contract>>(
         args: task.args as any,
         maxPriorityFeePerGas: priorityFee,
         maxFeePerGas: baseFeePerGas + priorityFee,
+        value: task.value,
       });
 
       if (!hash) {
@@ -113,10 +114,11 @@ export default function executor<TContracts extends Record<string, Contract>>(
     maxPriorityFeePerGas?: bigint | number;
     maxFeePerGas?: bigint | number;
     gasLimit?: bigint | number;
+    value?: bigint | number;
   }) {
     try {
-      const client = executorConfig.ethereumClients[config.chain as string];
-      const wallet = executorConfig.ethereumWallets[config.chain as string];
+      const client = executorConfig.clients[config.chain as string];
+      const wallet = executorConfig.wallets[config.chain as string];
 
       const { deployments, abi } = executorConfig.contracts[config.contract];
 
@@ -149,6 +151,7 @@ export default function executor<TContracts extends Record<string, Contract>>(
           ? BigInt(config.maxFeePerGas)
           : undefined,
         gas: BigInt(gasLimit) + BigInt(executorConfig.gasLimitBuffer),
+        value: config.value ? BigInt(config.value) : undefined,
       });
 
       return wallet.writeContract(request);

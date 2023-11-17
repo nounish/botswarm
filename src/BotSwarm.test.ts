@@ -21,12 +21,18 @@ describe("BotSwarm", () => {
         },
       },
     },
+    hooks: {
+      testHook: async (task) => {
+        return task;
+      },
+    },
     privateKey: process.env.ETHEREUM_PRIVATE_KEY as string,
     cacheTasks: false,
   });
 
   const task = {
     block: 99999999999999999999n,
+    hooks: ["testHook"],
     contract: "TestContract",
     chain: "sepolia",
     functionName: "testFunction",

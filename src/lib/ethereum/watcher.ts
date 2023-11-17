@@ -20,7 +20,7 @@ export default function watcher<
   TContracts extends Record<string, Contract>
 >(watcherConfig: {
   contracts: TContracts;
-  ethereumClients: Record<string, EthereumClient>;
+  clients: Record<string, EthereumClient>;
 }) {
   let onBlockListeners: Record<string, OnBlockCallback[]> = {};
 
@@ -60,7 +60,7 @@ export default function watcher<
       }
     ) => void
   ) {
-    const client = watcherConfig.ethereumClients[config.chain as string];
+    const client = watcherConfig.clients[config.chain as string];
     const { deployments, abi } = watcherConfig.contracts[config.contract];
 
     client.watchEvent({
@@ -98,7 +98,7 @@ export default function watcher<
     functionName: TFunctionName;
     args?: TArgs;
   }) {
-    const client = watcherConfig.ethereumClients[config.chain as string];
+    const client = watcherConfig.clients[config.chain as string];
     const { deployments, abi } = watcherConfig.contracts[config.contract];
 
     return client.readContract({
@@ -111,7 +111,7 @@ export default function watcher<
     >;
   }
 
-  for (const [chain, client] of Object.entries(watcherConfig.ethereumClients)) {
+  for (const [chain, client] of Object.entries(watcherConfig.clients)) {
     client.watchBlockNumber({
       onBlockNumber: async (block) => {
         for (const blockListener of onBlockListeners[chain]) {

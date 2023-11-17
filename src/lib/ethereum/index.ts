@@ -13,7 +13,7 @@ import * as chains from "viem/chains";
 import type _ from "viem/node_modules/abitype";
 import { BotSwarmConfig } from "../../BotSwarm";
 import { Logger } from "../logger";
-import scheduler from "./scheduler";
+import scheduler, { Task } from "./scheduler";
 import executor from "./executor";
 import watcher from "./watcher";
 import { Cacher } from "../cacher";
@@ -35,9 +35,12 @@ export type Contract = {
   };
 };
 
+export type Hook = (task: Task, block: bigint) => Promise<Task>;
+
 export type EthereumConfig<TContracts> = {
   contracts: TContracts;
   privateKey: string;
+  hooks: Record<string, Hook>;
   rpcs: { [TChain in EthereumChains]?: string };
   gasLimitBuffer: number;
   blockExecutionBuffer: number;
@@ -52,6 +55,7 @@ export default function createEthereum(
   return <TContracts extends Record<string, Contract>>(config: {
     contracts: EthereumConfig<TContracts>["contracts"];
     privateKey: EthereumConfig<TContracts>["privateKey"];
+    hooks?: EthereumConfig<TContracts>["hooks"];
     rpcs?: EthereumConfig<TContracts>["rpcs"];
     gasLimitBuffer?: EthereumConfig<TContracts>["gasLimitBuffer"];
     blockExecutionBuffer?: EthereumConfig<TContracts>["blockExecutionBuffer"];
@@ -61,20 +65,21 @@ export default function createEthereum(
       rpcs: {
         mainnet: "https://rpc.flashbots.net/",
       },
+      hooks: {},
       cacheTasks: true,
       gasLimitBuffer: 30000,
       blockExecutionBuffer: 0,
       ...config,
     } satisfies EthereumConfig<TContracts>;
 
-    let ethereumClients = {} as Record<EthereumChains, EthereumClient>;
-    let ethereumWallets = {} as Record<EthereumChains, EthereumWallet>;
+    let clients = {} as Record<EthereumChains, EthereumClient>;
+    let wallets = {} as Record<EthereumChains, EthereumWallet>;
 
     for (const contract in ethereumConfig.contracts) {
       for (const deployment in ethereumConfig.contracts[contract].deployments) {
         const rpc = ethereumConfig.rpcs[deployment as EthereumChains];
 
-        ethereumClients[deployment as EthereumChains] = createPublicClient({
+        clients[deployment as EthereumChains] = createPublicClient({
           transport: http(rpc),
           chain: chains[deployment as EthereumChains] as Chain,
         });
@@ -85,7 +90,7 @@ export default function createEthereum(
           );
         }
 
-        ethereumWallets[deployment as EthereumChains] = createWalletClient({
+        wallets[deployment as EthereumChains] = createWalletClient({
           account: privateKeyToAccount(
             process.env.ETHEREUM_PRIVATE_KEY as Address
           ),
@@ -104,7 +109,11 @@ export default function createEthereum(
       rescheduleTask,
       cacheTasks,
     } = scheduler(
-      { contracts: config.contracts, cacheTasks: ethereumConfig.cacheTasks },
+      {
+        contracts: config.contracts,
+        hooks: ethereumConfig.hooks,
+        cacheTasks: ethereumConfig.cacheTasks,
+      },
       log,
       cacher
     );
@@ -112,8 +121,8 @@ export default function createEthereum(
     const { execute, executing, write } = executor(
       {
         contracts: config.contracts,
-        ethereumClients,
-        ethereumWallets,
+        clients,
+        wallets,
         gasLimitBuffer: ethereumConfig.gasLimitBuffer,
       },
       log
@@ -121,10 +130,10 @@ export default function createEthereum(
 
     const { onBlock, watch, read } = watcher({
       contracts: config.contracts,
-      ethereumClients,
+      clients,
     });
 
-    for (const chain in ethereumClients) {
+    for (const chain in clients) {
       onBlock(chain, async (block) => {
         for (const task of tasks()) {
           if (
@@ -132,27 +141,38 @@ export default function createEthereum(
             task.block <= block + BigInt(ethereumConfig.blockExecutionBuffer) &&
             !executing()[task.id]
           ) {
-            const success = await execute(task);
+            let modifiedTask = task;
+
+            for (const hook of task.hooks) {
+              if (hook in ethereumConfig.hooks) {
+                modifiedTask = await ethereumConfig.hooks[hook](
+                  modifiedTask,
+                  block
+                );
+              }
+            }
+
+            const success = await execute(modifiedTask);
 
             if (success) {
-              removeTask(task.id);
+              removeTask(modifiedTask.id);
               continue;
             }
 
-            if (rescheduled()[task.id]) {
-              removeTask(task.id);
+            if (rescheduled()[modifiedTask.id]) {
+              removeTask(modifiedTask.id);
               continue;
             }
 
-            rescheduleTask(task.id, block + 5n, true);
+            rescheduleTask(modifiedTask.id, block + 5n, true);
           }
         }
       });
     }
 
     return {
-      ethereumClients,
-      ethereumWallets,
+      clients,
+      wallets,
       contracts: config.contracts,
 
       // Scheduler

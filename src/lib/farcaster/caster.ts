@@ -15,8 +15,8 @@ export default function caster(
   casterConfig: {
     fid: number;
     network: FarcasterNetwork;
-    farcasterClient: FarcasterClient;
-    farcasterSigner: FarcasterSigner;
+    client: FarcasterClient;
+    signer: FarcasterSigner;
   },
   log: Logger
 ) {
@@ -49,7 +49,7 @@ export default function caster(
         parentUrl,
       },
       dataOptions,
-      casterConfig.farcasterSigner
+      casterConfig.signer
     );
 
     if (addCast.isErr()) {
@@ -57,7 +57,7 @@ export default function caster(
       return;
     }
 
-    const submitMessage = await casterConfig.farcasterClient.submitMessage(
+    const submitMessage = await casterConfig.client.submitMessage(
       addCast.value
     );
 
@@ -77,7 +77,7 @@ export default function caster(
     const removeCast = await makeCastRemove(
       { targetHash: cast.hash },
       dataOptions,
-      casterConfig.farcasterSigner
+      casterConfig.signer
     );
 
     if (removeCast.isErr()) {
@@ -85,7 +85,7 @@ export default function caster(
       return false;
     }
 
-    const submitMessage = await casterConfig.farcasterClient.submitMessage(
+    const submitMessage = await casterConfig.client.submitMessage(
       removeCast.value
     );
 
@@ -119,7 +119,7 @@ export default function caster(
         },
       },
       dataOptions,
-      casterConfig.farcasterSigner
+      casterConfig.signer
     );
 
     if (addCast.isErr()) {
@@ -127,7 +127,7 @@ export default function caster(
       return;
     }
 
-    const submitMessage = await casterConfig.farcasterClient.submitMessage(
+    const submitMessage = await casterConfig.client.submitMessage(
       addCast.value
     );
 
@@ -153,7 +153,7 @@ export default function caster(
         },
       },
       dataOptions,
-      casterConfig.farcasterSigner
+      casterConfig.signer
     );
 
     if (addReaction.isErr()) {
@@ -161,7 +161,7 @@ export default function caster(
       return false;
     }
 
-    const submitMessage = await casterConfig.farcasterClient.submitMessage(
+    const submitMessage = await casterConfig.client.submitMessage(
       addReaction.value
     );
 
@@ -183,7 +183,7 @@ export default function caster(
         },
       },
       dataOptions,
-      casterConfig.farcasterSigner
+      casterConfig.signer
     );
 
     if (removeReaction.isErr()) {
@@ -191,7 +191,7 @@ export default function caster(
       return false;
     }
 
-    const submitMessage = await casterConfig.farcasterClient.submitMessage(
+    const submitMessage = await casterConfig.client.submitMessage(
       removeReaction.value
     );
 
@@ -217,7 +217,7 @@ export default function caster(
           value: value.pfp,
         },
         dataOptions,
-        casterConfig.farcasterSigner
+        casterConfig.signer
       );
 
       if (addPfp.isErr()) {
@@ -225,7 +225,7 @@ export default function caster(
         return false;
       }
 
-      const submitMessage = await casterConfig.farcasterClient.submitMessage(
+      const submitMessage = await casterConfig.client.submitMessage(
         addPfp.value
       );
 
@@ -242,7 +242,7 @@ export default function caster(
           value: value.displayName,
         },
         dataOptions,
-        casterConfig.farcasterSigner
+        casterConfig.signer
       );
 
       if (addDisplayName.isErr()) {
@@ -250,7 +250,7 @@ export default function caster(
         return false;
       }
 
-      const submitMessage = await casterConfig.farcasterClient.submitMessage(
+      const submitMessage = await casterConfig.client.submitMessage(
         addDisplayName.value
       );
 
@@ -267,7 +267,7 @@ export default function caster(
           value: value.bio,
         },
         dataOptions,
-        casterConfig.farcasterSigner
+        casterConfig.signer
       );
 
       if (addBio.isErr()) {
@@ -275,7 +275,7 @@ export default function caster(
         return false;
       }
 
-      const submitMessage = await casterConfig.farcasterClient.submitMessage(
+      const submitMessage = await casterConfig.client.submitMessage(
         addBio.value
       );
 
@@ -292,7 +292,7 @@ export default function caster(
           value: value.url,
         },
         dataOptions,
-        casterConfig.farcasterSigner
+        casterConfig.signer
       );
 
       if (addUrl.isErr()) {
@@ -300,7 +300,7 @@ export default function caster(
         return false;
       }
 
-      const submitMessage = await casterConfig.farcasterClient.submitMessage(
+      const submitMessage = await casterConfig.client.submitMessage(
         addUrl.value
       );
 
@@ -317,7 +317,7 @@ export default function caster(
           value: value.username,
         },
         dataOptions,
-        casterConfig.farcasterSigner
+        casterConfig.signer
       );
 
       if (addUsername.isErr()) {
@@ -325,7 +325,7 @@ export default function caster(
         return false;
       }
 
-      const submitMessage = await casterConfig.farcasterClient.submitMessage(
+      const submitMessage = await casterConfig.client.submitMessage(
         addUsername.value
       );
 

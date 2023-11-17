@@ -300,6 +300,44 @@ export default [
   },
   {
     inputs: [],
+    name: "motivatorConfig",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "refundBaseGas",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "maxRefundPriorityFee",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "maxRefundGasUsed",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "maxRefund",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "maxRefundBaseFee",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "tipAmount",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "owner",
     outputs: [
       {
@@ -342,6 +380,25 @@ export default [
     name: "relayVotes",
     outputs: [],
     stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    name: "relayed",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
     type: "function",
   },
   {
@@ -402,6 +459,11 @@ export default [
         components: [
           {
             internalType: "address",
+            name: "base",
+            type: "address",
+          },
+          {
+            internalType: "address",
             name: "reliquary",
             type: "address",
           },
@@ -423,6 +485,11 @@ export default [
           {
             internalType: "address",
             name: "logProver",
+            type: "address",
+          },
+          {
+            internalType: "address",
+            name: "transactionProver",
             type: "address",
           },
           {

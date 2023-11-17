@@ -37,6 +37,11 @@ export default [
   },
   {
     inputs: [],
+    name: "MissingProposalCreatedProofs",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "NoVotingPower",
     type: "error",
   },
@@ -68,11 +73,6 @@ export default [
   },
   {
     inputs: [],
-    name: "ProposalNotStarted",
-    type: "error",
-  },
-  {
-    inputs: [],
     name: "SyncProposalInvalidProof",
     type: "error",
   },
@@ -92,6 +92,11 @@ export default [
     inputs: [
       {
         components: [
+          {
+            internalType: "address",
+            name: "base",
+            type: "address",
+          },
           {
             internalType: "address",
             name: "reliquary",
@@ -115,6 +120,11 @@ export default [
           {
             internalType: "address",
             name: "logProver",
+            type: "address",
+          },
+          {
+            internalType: "address",
+            name: "transactionProver",
             type: "address",
           },
           {
@@ -220,12 +230,6 @@ export default [
         indexed: true,
         internalType: "uint256",
         name: "proposal",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "startBlock",
         type: "uint256",
       },
       {
@@ -388,6 +392,11 @@ export default [
     outputs: [
       {
         internalType: "address",
+        name: "base",
+        type: "address",
+      },
+      {
+        internalType: "address",
         name: "reliquary",
         type: "address",
       },
@@ -409,6 +418,11 @@ export default [
       {
         internalType: "address",
         name: "logProver",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "transactionProver",
         type: "address",
       },
       {
@@ -583,6 +597,44 @@ export default [
   },
   {
     inputs: [],
+    name: "motivatorConfig",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "refundBaseGas",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "maxRefundPriorityFee",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "maxRefundGasUsed",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "maxRefund",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "maxRefundBaseFee",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "tipAmount",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "owner",
     outputs: [
       {
@@ -685,6 +737,11 @@ export default [
         components: [
           {
             internalType: "address",
+            name: "base",
+            type: "address",
+          },
+          {
+            internalType: "address",
             name: "reliquary",
             type: "address",
           },
@@ -706,6 +763,11 @@ export default [
           {
             internalType: "address",
             name: "logProver",
+            type: "address",
+          },
+          {
+            internalType: "address",
+            name: "transactionProver",
             type: "address",
           },
           {
@@ -805,6 +867,11 @@ export default [
         internalType: "uint256",
         name: "_proposal",
         type: "uint256",
+      },
+      {
+        internalType: "bytes",
+        name: "_blockProof",
+        type: "bytes",
       },
     ],
     name: "settleVotes",

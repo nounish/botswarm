@@ -54,11 +54,9 @@ export default function createFarcaster(
       ...config,
     } satisfies FarcasterConfig;
 
-    let farcasterClient: FarcasterClient = getSSLHubRpcClient(
-      farcasterConfig.rpc
-    );
+    let client: FarcasterClient = getSSLHubRpcClient(farcasterConfig.rpc);
 
-    let farcasterSigner: FarcasterSigner = new NobleEd25519Signer(
+    let signer: FarcasterSigner = new NobleEd25519Signer(
       ed.etc.hexToBytes(config.signerPrivateKey)
     );
 
@@ -70,15 +68,15 @@ export default function createFarcaster(
             FarcasterNetwork[
               farcasterConfig.network.toUpperCase() as Uppercase<FarcasterNetworks>
             ],
-          farcasterClient,
-          farcasterSigner,
+          client,
+          signer,
         },
         log
       );
 
     return {
-      farcasterClient,
-      farcasterSigner,
+      client,
+      signer,
       cast,
       removeCast,
       reply,
