@@ -26,7 +26,8 @@ export const FederationNounsPool = {
 export const FederationNounsGovernor = {
   abi: FederationNounsGovernorABI,
   deployments: {
-    zkSyncTestnet: "0x",
+    zkSync: "0x",
+    sepolia: "0x",
   },
 } as const satisfies Contract;
 
