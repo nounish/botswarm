@@ -145,10 +145,14 @@ export default function createEthereum(
 
             for (const hook of task.hooks) {
               if (hook in ethereumConfig.hooks) {
-                modifiedTask = await ethereumConfig.hooks[hook](
-                  modifiedTask,
-                  block
-                );
+                try {
+                  modifiedTask = await ethereumConfig.hooks[hook](
+                    modifiedTask,
+                    block
+                  );
+                } catch (e) {
+                  log.error(e as string);
+                }
               }
             }
 
