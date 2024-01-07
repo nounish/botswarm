@@ -109,7 +109,7 @@ export default function createEthereum(
 
     const {
       tasks,
-      rescheduled,
+      rescheduledTasks,
       addTask,
       getTask,
       removeTask,
@@ -140,7 +140,15 @@ export default function createEthereum(
       clients,
     });
 
-    const { run, running, schedule, cancel, getInstance, instances } = runner(
+    const {
+      run,
+      running,
+      schedule,
+      cancel,
+      getInstance,
+      instances,
+      rescheduled,
+    } = runner(
       {
         scripts: ethereumConfig.scripts,
         cacheInstances: ethereumConfig.cacheScriptInstances,
@@ -179,7 +187,7 @@ export default function createEthereum(
               continue;
             }
 
-            if (rescheduled()[modifiedTask.id]) {
+            if (rescheduledTasks()[modifiedTask.id]) {
               removeTask(modifiedTask.id);
               continue;
             }
@@ -200,6 +208,13 @@ export default function createEthereum(
               cancel(instance.id);
               continue;
             }
+
+            if (rescheduled()[instance.id]) {
+              cancel(instance.id);
+              continue;
+            }
+
+            rescheduleTask(instance.id, block + 5n, true);
           }
         }
       });
@@ -212,7 +227,7 @@ export default function createEthereum(
 
       // Scheduler
       tasks,
-      rescheduled,
+      rescheduledTasks,
       addTask,
       getTask,
       removeTask,
@@ -236,6 +251,7 @@ export default function createEthereum(
       cancel,
       getInstance,
       instances,
+      rescheduled,
     };
   };
 }

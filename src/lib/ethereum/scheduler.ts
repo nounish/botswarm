@@ -32,7 +32,7 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
   cacher: Cacher
 ) {
   let tasks: Array<Task> = [];
-  let rescheduled: Record<string, boolean> = {};
+  let rescheduledTasks: Record<string, boolean> = {};
 
   if (schedulerConfig.cacheTasks) {
     log.active("Loading cached tasks");
@@ -169,7 +169,7 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
 
     task.block = typeof block === "number" ? BigInt(block) : block;
 
-    if (flagAsRescheduled) rescheduled[id] = true;
+    if (flagAsRescheduled) rescheduledTasks[id] = true;
 
     if (schedulerConfig.cacheTasks) cacher.cache("tasks", tasks);
 
@@ -184,7 +184,7 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
 
   return {
     tasks: () => tasks,
-    rescheduled: () => rescheduled,
+    rescheduledTasks: () => rescheduledTasks,
     addTask,
     getTask,
     removeTask,

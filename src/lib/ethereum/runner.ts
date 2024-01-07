@@ -20,6 +20,7 @@ export default function runner(
 ) {
   let instances: Array<Instance> = [];
   let running: Record<string, boolean> = {};
+  let rescheduled: Record<string, boolean> = {};
 
   if (runnerConfig.cacheInstances) {
     log.active("Loading cached script instances");
@@ -68,6 +69,31 @@ export default function runner(
 
     log.success(
       `Sucessfully scheduled ${identifier} for block ${colors.yellow(
+        instance.block
+      )}`
+    );
+  }
+
+  function reschedule(id: string, block: number, flagAsRescheduled?: boolean) {
+    const index = instances.findIndex((instance) => instance.id === id);
+    let instance = instances[index];
+
+    const identifier = parseInstanceIdentifier(instance);
+
+    if (index === -1) {
+      log.error(`Failed to reschedule task ${identifier} does not exist`);
+
+      return false;
+    }
+
+    instance.block = block;
+
+    if (flagAsRescheduled) rescheduled[id] = true;
+
+    if (runnerConfig.cacheInstances) cacher.cache("instances", instances);
+
+    log.success(
+      `Sucessfully rescheduled script instance ${identifier} for block ${colors.yellow(
         instance.block
       )}`
     );
@@ -137,5 +163,6 @@ export default function runner(
     instances: () => instances,
     getInstance,
     cancel,
+    rescheduled: () => rescheduled,
   };
 }
