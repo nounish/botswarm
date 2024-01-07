@@ -17,6 +17,7 @@ import scheduler, { Task } from "./scheduler";
 import executor from "./executor";
 import watcher from "./watcher";
 import { Cacher } from "../cacher";
+import runner from "./runner";
 
 export type EthereumClient = PublicClient<HttpTransport, Chain>;
 
@@ -41,10 +42,12 @@ export type EthereumConfig<TContracts> = {
   contracts: TContracts;
   privateKey: string;
   hooks: Record<string, Hook>;
+  scripts: Record<string, Function>;
   rpcs: { [TChain in EthereumChains]?: string };
   gasLimitBuffer: number;
   blockExecutionBuffer: number;
   cacheTasks: boolean;
+  cacheScriptInstances: boolean;
 };
 
 export default function createEthereum(
@@ -56,17 +59,21 @@ export default function createEthereum(
     contracts: EthereumConfig<TContracts>["contracts"];
     privateKey: EthereumConfig<TContracts>["privateKey"];
     hooks?: EthereumConfig<TContracts>["hooks"];
+    scripts?: EthereumConfig<TContracts>["scripts"];
     rpcs?: EthereumConfig<TContracts>["rpcs"];
     gasLimitBuffer?: EthereumConfig<TContracts>["gasLimitBuffer"];
     blockExecutionBuffer?: EthereumConfig<TContracts>["blockExecutionBuffer"];
     cacheTasks?: EthereumConfig<TContracts>["cacheTasks"];
+    cacheScriptInstances?: EthereumConfig<TContracts>["cacheScriptInstances"];
   }) => {
     const ethereumConfig = {
       rpcs: {
         mainnet: "https://rpc.flashbots.net/",
       },
       hooks: {},
+      scripts: {},
       cacheTasks: true,
+      cacheScriptInstances: true,
       gasLimitBuffer: 30000,
       blockExecutionBuffer: 0,
       ...config,
@@ -133,6 +140,15 @@ export default function createEthereum(
       clients,
     });
 
+    const { run, running, schedule, cancel, getInstance, instances } = runner(
+      {
+        scripts: ethereumConfig.scripts,
+        cacheInstances: ethereumConfig.cacheScriptInstances,
+      },
+      log,
+      cacher
+    );
+
     for (const chain in clients) {
       onBlock(chain, async (block) => {
         for (const task of tasks()) {
@@ -171,6 +187,21 @@ export default function createEthereum(
             rescheduleTask(modifiedTask.id, block + 5n, true);
           }
         }
+
+        for (const instance of instances()) {
+          if (
+            !running()[instance.id] &&
+            instance.block <=
+              block + BigInt(ethereumConfig.blockExecutionBuffer)
+          ) {
+            const success = await run(instance);
+
+            if (success) {
+              cancel(instance.id);
+              continue;
+            }
+          }
+        }
       });
     }
 
@@ -197,6 +228,14 @@ export default function createEthereum(
       onBlock,
       watch,
       read,
+
+      // Runner
+      schedule,
+      running,
+      run,
+      cancel,
+      getInstance,
+      instances,
     };
   };
 }

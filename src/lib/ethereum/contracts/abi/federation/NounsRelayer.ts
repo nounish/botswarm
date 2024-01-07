@@ -1,690 +1,504 @@
 export default [
   {
-    inputs: [],
-    name: "AlreadyRelayed",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "DepositSmallerThanBalance",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "InvalidMessageProof",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "NotMotivator",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "QuorumNotMet",
-    type: "error",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        components: [
-          {
-            internalType: "address",
-            name: "base",
-            type: "address",
-          },
-          {
-            internalType: "address",
-            name: "externalDAO",
-            type: "address",
-          },
-          {
-            internalType: "address",
-            name: "externalToken",
-            type: "address",
-          },
-          {
-            internalType: "address",
-            name: "zkSync",
-            type: "address",
-          },
-          {
-            internalType: "address",
-            name: "governor",
-            type: "address",
-          },
-          {
-            internalType: "uint256",
-            name: "quorumVotesBPS",
-            type: "uint256",
-          },
-        ],
-        indexed: false,
-        internalType: "struct Relayer.Config",
-        name: "config",
-        type: "tuple",
-      },
-    ],
-    name: "ConfigChanged",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "motivator",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-    ],
-    name: "Deposit",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "uint8",
-        name: "version",
-        type: "uint8",
-      },
-    ],
-    name: "Initialized",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "previousOwner",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "newOwner",
-        type: "address",
-      },
-    ],
-    name: "OwnershipTransferred",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "to",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-    ],
-    name: "Refund",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "to",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-    ],
-    name: "Tip",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "uint256",
-        name: "proposal",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint8",
-        name: "support",
-        type: "uint8",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "totalVotes",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "totalVotesCast",
-        type: "uint256",
-      },
-    ],
-    name: "VotesRelayed",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "motivator",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-    ],
-    name: "Withdraw",
-    type: "event",
-  },
-  {
-    inputs: [],
-    name: "balance",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
     type: "function",
-  },
-  {
-    inputs: [],
     name: "config",
+    inputs: [],
     outputs: [
+      { name: "base", type: "address", internalType: "address" },
+      { name: "externalDAO", type: "address", internalType: "address" },
+      { name: "nativeToken", type: "address", internalType: "address" },
+      { name: "zkSync", type: "address", internalType: "address" },
+      { name: "governor", type: "address", internalType: "address" },
       {
-        internalType: "address",
-        name: "base",
-        type: "address",
-      },
-      {
-        internalType: "address",
-        name: "externalDAO",
-        type: "address",
-      },
-      {
-        internalType: "address",
-        name: "externalToken",
-        type: "address",
-      },
-      {
-        internalType: "address",
-        name: "zkSync",
-        type: "address",
-      },
-      {
-        internalType: "address",
-        name: "governor",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
         name: "quorumVotesBPS",
         type: "uint256",
+        internalType: "uint256",
       },
     ],
     stateMutability: "view",
-    type: "function",
   },
   {
-    inputs: [],
-    name: "deposit",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "payable",
     type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "bytes",
-        name: "_data",
-        type: "bytes",
-      },
-    ],
     name: "init",
+    inputs: [{ name: "_data", type: "bytes", internalType: "bytes" }],
     outputs: [],
     stateMutability: "payable",
-    type: "function",
   },
   {
-    inputs: [],
-    name: "motivator",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
     type: "function",
-  },
-  {
-    inputs: [],
     name: "motivatorConfig",
+    inputs: [],
     outputs: [
       {
-        internalType: "uint256",
         name: "refundBaseGas",
         type: "uint256",
+        internalType: "uint256",
       },
       {
-        internalType: "uint256",
         name: "maxRefundPriorityFee",
         type: "uint256",
+        internalType: "uint256",
       },
       {
-        internalType: "uint256",
         name: "maxRefundGasUsed",
         type: "uint256",
+        internalType: "uint256",
       },
       {
-        internalType: "uint256",
-        name: "maxRefund",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
         name: "maxRefundBaseFee",
         type: "uint256",
-      },
-      {
         internalType: "uint256",
-        name: "tipAmount",
-        type: "uint256",
       },
+      { name: "tipAmount", type: "uint256", internalType: "uint256" },
     ],
     stateMutability: "view",
-    type: "function",
   },
   {
-    inputs: [],
+    type: "function",
     name: "owner",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
+    inputs: [],
+    outputs: [{ name: "", type: "address", internalType: "address" }],
     stateMutability: "view",
-    type: "function",
   },
   {
+    type: "function",
+    name: "relayVotes",
     inputs: [
       {
-        internalType: "uint256",
-        name: "_l2BlockNumber",
+        name: "_l1BatchNumber",
         type: "uint256",
-      },
-      {
         internalType: "uint256",
-        name: "_index",
-        type: "uint256",
       },
+      { name: "_index", type: "uint256", internalType: "uint256" },
       {
-        internalType: "uint16",
-        name: "_l2TxNumberInBlock",
+        name: "_l1BatchTxIndex",
         type: "uint16",
+        internalType: "uint16",
       },
+      { name: "_message", type: "bytes", internalType: "bytes" },
       {
-        internalType: "bytes",
-        name: "_message",
-        type: "bytes",
-      },
-      {
-        internalType: "bytes32[]",
         name: "_messageProof",
         type: "bytes32[]",
+        internalType: "bytes32[]",
       },
     ],
-    name: "relayVotes",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
   },
   {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
+    type: "function",
     name: "relayed",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
-    ],
+    inputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+    outputs: [{ name: "", type: "bool", internalType: "bool" }],
     stateMutability: "view",
-    type: "function",
   },
   {
-    inputs: [],
+    type: "function",
     name: "renounceOwnership",
+    inputs: [],
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
   },
   {
+    type: "function",
+    name: "setConfig",
     inputs: [
       {
+        name: "_config",
+        type: "tuple",
+        internalType: "struct Relayer.Config",
         components: [
+          { name: "base", type: "address", internalType: "address" },
           {
-            internalType: "address",
-            name: "base",
-            type: "address",
-          },
-          {
-            internalType: "address",
             name: "externalDAO",
             type: "address",
+            internalType: "address",
           },
           {
-            internalType: "address",
-            name: "externalToken",
+            name: "nativeToken",
             type: "address",
-          },
-          {
             internalType: "address",
-            name: "zkSync",
-            type: "address",
           },
+          { name: "zkSync", type: "address", internalType: "address" },
           {
-            internalType: "address",
             name: "governor",
             type: "address",
+            internalType: "address",
           },
           {
-            internalType: "uint256",
             name: "quorumVotesBPS",
             type: "uint256",
+            internalType: "uint256",
           },
         ],
-        internalType: "struct Relayer.Config",
-        name: "_config",
-        type: "tuple",
       },
     ],
-    name: "setConfig",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
   },
   {
+    type: "function",
+    name: "setGovernorConfig",
     inputs: [
       {
+        name: "_config",
+        type: "tuple",
+        internalType: "struct Governor.Config",
         components: [
           {
-            internalType: "address",
-            name: "base",
-            type: "address",
-          },
-          {
-            internalType: "address",
             name: "reliquary",
             type: "address",
+            internalType: "address",
           },
           {
-            internalType: "address",
-            name: "externalToken",
+            name: "nativeToken",
             type: "address",
+            internalType: "address",
           },
           {
-            internalType: "address",
             name: "externalDAO",
             type: "address",
+            internalType: "address",
           },
           {
-            internalType: "address",
             name: "storageProver",
             type: "address",
+            internalType: "address",
           },
           {
-            internalType: "address",
             name: "logProver",
             type: "address",
+            internalType: "address",
           },
           {
-            internalType: "address",
             name: "transactionProver",
             type: "address",
+            internalType: "address",
           },
           {
-            internalType: "address",
             name: "factValidator",
             type: "address",
+            internalType: "address",
           },
           {
-            internalType: "address",
             name: "messenger",
             type: "address",
+            internalType: "address",
           },
           {
-            internalType: "bytes32",
             name: "tokenDelegateSlot",
-            type: "bytes32",
-          },
-          {
-            internalType: "bytes32",
-            name: "tokenBalanceSlot",
-            type: "bytes32",
-          },
-          {
+            type: "uint256",
             internalType: "uint256",
+          },
+          {
+            name: "tokenBalanceSlot",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
             name: "maxProverVersion",
             type: "uint256",
+            internalType: "uint256",
           },
           {
-            internalType: "uint256",
             name: "castWindow",
             type: "uint256",
+            internalType: "uint256",
           },
           {
-            internalType: "uint256",
             name: "finalityBlocks",
             type: "uint256",
+            internalType: "uint256",
           },
         ],
-        internalType: "struct Governor.Config",
-        name: "_config",
-        type: "tuple",
       },
+      { name: "_gasLimit", type: "uint256", internalType: "uint256" },
       {
-        internalType: "uint256",
-        name: "_gasLimit",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
         name: "_gasPerPubdataByteLimit",
         type: "uint256",
+        internalType: "uint256",
       },
     ],
-    name: "setGovernorConfig",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
   },
   {
-    inputs: [
-      {
-        components: [
-          {
-            internalType: "uint256",
-            name: "refundBaseGas",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "maxRefundPriorityFee",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "maxRefundGasUsed",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "maxRefund",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "maxRefundBaseFee",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "tipAmount",
-            type: "uint256",
-          },
-        ],
-        internalType: "struct ExternalMotivator.MotivatorConfig",
-        name: "_motivatorConfig",
-        type: "tuple",
-      },
-      {
-        internalType: "uint256",
-        name: "_gasLimit",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_gasPerPubdataByteLimit",
-        type: "uint256",
-      },
-    ],
+    type: "function",
     name: "setGovernorMotivatorConfig",
-    outputs: [],
-    stateMutability: "payable",
-    type: "function",
-  },
-  {
     inputs: [
       {
-        components: [
-          {
-            internalType: "uint256",
-            name: "refundBaseGas",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "maxRefundPriorityFee",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "maxRefundGasUsed",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "maxRefund",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "maxRefundBaseFee",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "tipAmount",
-            type: "uint256",
-          },
-        ],
-        internalType: "struct ExternalMotivator.MotivatorConfig",
         name: "_motivatorConfig",
         type: "tuple",
+        internalType: "struct MotivatorV2.MotivatorConfig",
+        components: [
+          {
+            name: "refundBaseGas",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "maxRefundPriorityFee",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "maxRefundGasUsed",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "maxRefundBaseFee",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "tipAmount",
+            type: "uint256",
+            internalType: "uint256",
+          },
+        ],
+      },
+      { name: "_gasLimit", type: "uint256", internalType: "uint256" },
+      {
+        name: "_gasPerPubdataByteLimit",
+        type: "uint256",
+        internalType: "uint256",
       },
     ],
+    outputs: [],
+    stateMutability: "payable",
+  },
+  {
+    type: "function",
     name: "setMotivatorConfig",
+    inputs: [
+      {
+        name: "_motivatorConfig",
+        type: "tuple",
+        internalType: "struct MotivatorV2.MotivatorConfig",
+        components: [
+          {
+            name: "refundBaseGas",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "maxRefundPriorityFee",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "maxRefundGasUsed",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "maxRefundBaseFee",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "tipAmount",
+            type: "uint256",
+            internalType: "uint256",
+          },
+        ],
+      },
+    ],
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
   },
   {
-    inputs: [],
-    name: "tip",
-    outputs: [
+    type: "function",
+    name: "transferOwnership",
+    inputs: [{ name: "newOwner", type: "address", internalType: "address" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "withdraw",
+    inputs: [
+      { name: "_amount", type: "uint256", internalType: "uint256" },
+      { name: "_to", type: "address", internalType: "address" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "withdrawFromGovenor",
+    inputs: [
+      { name: "_amount", type: "uint256", internalType: "uint256" },
+      { name: "_to", type: "address", internalType: "address" },
+      { name: "_gasLimit", type: "uint256", internalType: "uint256" },
       {
-        internalType: "uint256",
-        name: "",
+        name: "_gasPerPubdataByteLimit",
         type: "uint256",
+        internalType: "uint256",
       },
     ],
+    outputs: [],
     stateMutability: "payable",
-    type: "function",
   },
   {
+    type: "event",
+    name: "ConfigChanged",
     inputs: [
       {
+        name: "config",
+        type: "tuple",
+        indexed: false,
+        internalType: "struct Relayer.Config",
+        components: [
+          { name: "base", type: "address", internalType: "address" },
+          {
+            name: "externalDAO",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "nativeToken",
+            type: "address",
+            internalType: "address",
+          },
+          { name: "zkSync", type: "address", internalType: "address" },
+          {
+            name: "governor",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "quorumVotesBPS",
+            type: "uint256",
+            internalType: "uint256",
+          },
+        ],
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "Initialized",
+    inputs: [
+      {
+        name: "version",
+        type: "uint8",
+        indexed: false,
+        internalType: "uint8",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "OwnershipTransferred",
+    inputs: [
+      {
+        name: "previousOwner",
+        type: "address",
+        indexed: true,
         internalType: "address",
+      },
+      {
         name: "newOwner",
         type: "address",
+        indexed: true,
+        internalType: "address",
       },
     ],
-    name: "transferOwnership",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
+    anonymous: false,
   },
   {
-    inputs: [],
-    name: "withdraw",
-    outputs: [
+    type: "event",
+    name: "Refund",
+    inputs: [
       {
-        internalType: "uint256",
-        name: "",
+        name: "to",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "amount",
         type: "uint256",
+        indexed: false,
+        internalType: "uint256",
       },
     ],
-    stateMutability: "nonpayable",
-    type: "function",
+    anonymous: false,
   },
+  {
+    type: "event",
+    name: "Tip",
+    inputs: [
+      {
+        name: "to",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "amount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "VotesRelayed",
+    inputs: [
+      {
+        name: "proposal",
+        type: "uint256",
+        indexed: true,
+        internalType: "uint256",
+      },
+      {
+        name: "support",
+        type: "uint8",
+        indexed: false,
+        internalType: "uint8",
+      },
+      {
+        name: "totalVotes",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "totalVotesCast",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "Withdraw",
+    inputs: [
+      {
+        name: "amount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "to",
+        type: "address",
+        indexed: false,
+        internalType: "address",
+      },
+    ],
+    anonymous: false,
+  },
+  { type: "error", name: "AlreadyRelayed", inputs: [] },
+  { type: "error", name: "InvalidMessageProof", inputs: [] },
+  { type: "error", name: "QuorumNotMet", inputs: [] },
 ] as const;

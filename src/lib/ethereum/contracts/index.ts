@@ -26,15 +26,14 @@ export const FederationNounsPool = {
 export const FederationNounsGovernor = {
   abi: FederationNounsGovernorABI,
   deployments: {
-    zkSync: "0x",
-    sepolia: "0x",
+    zkSync: "0x12A8924D3B8F96c6B13eEbd022c1414d0b537Ad9",
   },
 } as const satisfies Contract;
 
 export const FederationNounsRelayer = {
   abi: FederationNounsRelayerABI,
   deployments: {
-    sepolia: "0x",
+    mainnet: "0x675188c46d47198e9b868633b67adaa16f8f4fcb",
   },
 } as const satisfies Contract;
 
