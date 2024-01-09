@@ -34,7 +34,7 @@ export default function executor<TContracts extends Record<string, Contract>>(
 
       log.active(`Executing task ${identifier}`);
 
-      const client = executorConfig.clients[task.chain];
+      const client = executorConfig.clients[task.execute.chain];
 
       const { baseFeePerGas } = await client.getBlock();
 
@@ -43,20 +43,21 @@ export default function executor<TContracts extends Record<string, Contract>>(
       }
 
       const priorityFee =
-        task.maxBaseFeeForPriority === 0
-          ? parseGwei(`${Number(task.priorityFee)}`)
-          : baseFeePerGas > parseGwei(`${Number(task.maxBaseFeeForPriority)}`)
+        task.execute.maxBaseFeeForPriority === 0
+          ? parseGwei(`${Number(task.execute.priorityFee)}`)
+          : baseFeePerGas >
+            parseGwei(`${Number(task.execute.maxBaseFeeForPriority)}`)
           ? 0n
-          : parseGwei(`${Number(task.priorityFee)}`);
+          : parseGwei(`${Number(task.execute.priorityFee)}`);
 
       const hash = await write({
-        contract: task.contract,
-        chain: task.chain as any,
-        functionName: task.functionName,
-        args: task.args as any,
+        contract: task.execute.contract,
+        chain: task.execute.chain as any,
+        functionName: task.execute.functionName,
+        args: task.execute.args as any,
         maxPriorityFeePerGas: priorityFee,
         maxFeePerGas: baseFeePerGas + priorityFee,
-        value: task.value,
+        value: task.execute.value,
       });
 
       if (!hash) {
@@ -72,14 +73,14 @@ export default function executor<TContracts extends Record<string, Contract>>(
         log.error(`
         Task ${identifier} reverted: {
           hash: ${colors.magenta(receipt.transactionHash)},
-          chain: ${colors.magenta(task.chain)},
+          chain: ${colors.magenta(task.execute.chain)},
           block: ${colors.magenta(Number(receipt.blockNumber))},
           contract: ${colors.magenta(
-            executorConfig.contracts[task.contract].deployments[
-              task.chain
+            executorConfig.contracts[task.execute.contract].deployments[
+              task.execute.chain
             ] as string
           )},
-          function: ${colors.magenta(task.functionName)},
+          function: ${colors.magenta(task.execute.functionName)},
         }        
         `);
       }

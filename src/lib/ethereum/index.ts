@@ -161,13 +161,14 @@ export default function createEthereum(
       onBlock(chain, async (block) => {
         for (const task of tasks()) {
           if (
-            task.chain === chain &&
-            task.block <= block + BigInt(ethereumConfig.blockExecutionBuffer) &&
+            task.schedule.chain === chain &&
+            task.schedule.block <=
+              block + BigInt(ethereumConfig.blockExecutionBuffer) &&
             !executing()[task.id]
           ) {
             let modifiedTask = task;
 
-            for (const hook of task.hooks) {
+            for (const hook of task.execute.hooks) {
               if (hook in ethereumConfig.hooks) {
                 try {
                   modifiedTask = await ethereumConfig.hooks[hook](

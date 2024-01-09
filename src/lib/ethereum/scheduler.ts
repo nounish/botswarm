@@ -11,15 +11,20 @@ import hash from "../../utils/hash.js";
 
 export type Task = {
   id: string;
-  block: bigint;
-  hooks: readonly string[];
-  contract: string;
-  chain: EthereumChains;
-  functionName: string;
-  args: any[];
-  priorityFee: number | bigint;
-  maxBaseFeeForPriority: number | bigint;
-  value: number | bigint;
+  schedule: {
+    block: bigint;
+    chain: EthereumChains;
+  };
+  execute: {
+    hooks: readonly string[];
+    contract: string;
+    chain: EthereumChains;
+    functionName: string;
+    args: any[];
+    priorityFee: number | bigint;
+    maxBaseFeeForPriority: number | bigint;
+    value: number | bigint;
+  };
 };
 
 export default function scheduler<TContracts extends Record<string, Contract>>(
@@ -45,7 +50,7 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
       const identifier = parseTaskIdentifier(task);
       log.success(
         `Cached task ${identifier} rescheduled for block ${colors.yellow(
-          Number(task.block)
+          Number(task.schedule.block)
         )}`
       );
     }
@@ -55,7 +60,7 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
 
   function addTask<
     TContract extends keyof TContracts,
-    TChain extends keyof TContracts[TContract]["deployments"],
+    TExecuteChain extends keyof TContracts[TContract]["deployments"],
     TFunctionName extends ExtractAbiFunctionNames<
       TContracts[TContract]["abi"],
       "payable" | "nonpayable"
@@ -64,33 +69,45 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
       ExtractAbiFunction<TContracts[TContract]["abi"], TFunctionName>["inputs"]
     >
   >(config: {
-    block: number | bigint;
-    hooks?: readonly string[];
-    contract: TContract;
-    chain: TChain;
-    functionName: TFunctionName;
-    args?: TArgs;
-    priorityFee?: number | bigint;
-    maxBaseFeeForPriority?: number | bigint;
-    value?: number | bigint;
+    schedule: {
+      block: number | bigint;
+      chain: EthereumChains;
+    };
+    execute: {
+      hooks?: readonly string[];
+      contract: TContract;
+      chain: TExecuteChain;
+      functionName: TFunctionName;
+      args?: TArgs;
+      priorityFee?: number | bigint;
+      maxBaseFeeForPriority?: number | bigint;
+      value?: number | bigint;
+    };
   }) {
     const task: Task = {
       id: hash(config),
-      block:
-        typeof config.block === "number" ? BigInt(config.block) : config.block,
-      hooks: (config.hooks as string[]) ?? [],
-      contract: config.contract as string,
-      chain: config.chain as EthereumChains,
-      functionName: config.functionName,
-      args: config.args as any,
-      priorityFee: config.priorityFee ?? 0,
-      maxBaseFeeForPriority: config.maxBaseFeeForPriority ?? 0,
-      value: config.value ?? 0,
+      schedule: {
+        block:
+          typeof config.schedule.block === "number"
+            ? BigInt(config.schedule.block)
+            : config.schedule.block,
+        chain: config.schedule.chain as EthereumChains,
+      },
+      execute: {
+        hooks: (config.execute.hooks as string[]) ?? [],
+        contract: config.execute.contract as string,
+        chain: config.execute.chain as EthereumChains,
+        functionName: config.execute.functionName,
+        args: config.execute.args as any,
+        priorityFee: config.execute.priorityFee ?? 0,
+        maxBaseFeeForPriority: config.execute.maxBaseFeeForPriority ?? 0,
+        value: config.execute.value ?? 0,
+      },
     };
 
     const identifier = parseTaskIdentifier(task);
 
-    for (const hook of task.hooks) {
+    for (const hook of task.execute.hooks) {
       if (!schedulerConfig.hooks[hook]) {
         log.error(
           `Failed to add task ${identifier} hook ${hook} does not exist`
@@ -113,7 +130,7 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
 
     log.success(
       `Sucessfully added task ${identifier} for block ${colors.yellow(
-        Number(config.block)
+        Number(config.schedule.block)
       )}`
     );
 
@@ -167,7 +184,7 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
       return false;
     }
 
-    task.block = typeof block === "number" ? BigInt(block) : block;
+    task.schedule.block = typeof block === "number" ? BigInt(block) : block;
 
     if (flagAsRescheduled) rescheduledTasks[id] = true;
 
@@ -175,7 +192,7 @@ export default function scheduler<TContracts extends Record<string, Contract>>(
 
     log.success(
       `Sucessfully rescheduled task ${identifier} for block ${colors.yellow(
-        Number(task.block)
+        Number(task.schedule.block)
       )}`
     );
 
