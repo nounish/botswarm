@@ -2,11 +2,13 @@ import { Logger, colors } from "../logger.js";
 import hash from "../../utils/hash.js";
 import parseInstanceIdentifier from "../../utils/parseInstanceIdentifier.js";
 import { Cacher } from "../cacher.js";
+import { EthereumChains } from "./index.js";
 
 export type Instance = {
   id: string;
   name: string;
   block: number;
+  chain: EthereumChains;
   args: any[];
 };
 
@@ -44,12 +46,14 @@ export default function runner(
   async function schedule(config: {
     name: string;
     block: number;
+    chain: EthereumChains;
     args: any[];
   }) {
     const instance: Instance = {
       id: hash(config),
       name: config.name,
       block: config.block,
+      chain: config.chain,
       args: config.args,
     };
 
@@ -164,5 +168,6 @@ export default function runner(
     getInstance,
     cancel,
     rescheduled: () => rescheduled,
+    reschedule,
   };
 }

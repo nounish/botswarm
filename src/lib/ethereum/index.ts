@@ -148,6 +148,7 @@ export default function createEthereum(
       getInstance,
       instances,
       rescheduled,
+      reschedule,
     } = runner(
       {
         scripts: ethereumConfig.scripts,
@@ -199,6 +200,7 @@ export default function createEthereum(
 
         for (const instance of instances()) {
           if (
+            instance.chain === chain &&
             !running()[instance.id] &&
             instance.block <=
               block + BigInt(ethereumConfig.blockExecutionBuffer)
@@ -215,7 +217,7 @@ export default function createEthereum(
               continue;
             }
 
-            rescheduleTask(instance.id, block + 5n, true);
+            reschedule(instance.id, Number(instance.block) + 5, true);
           }
         }
       });
@@ -253,6 +255,7 @@ export default function createEthereum(
       getInstance,
       instances,
       rescheduled,
+      reschedule,
     };
   };
 }
