@@ -84,10 +84,8 @@ export default function createEthereum(
 
     for (const contract in ethereumConfig.contracts) {
       for (const deployment in ethereumConfig.contracts[contract].deployments) {
-        const rpc = ethereumConfig.rpcs[deployment as EthereumChains];
-
         clients[deployment as EthereumChains] = createPublicClient({
-          transport: http(rpc),
+          transport: http(),
           chain: chains[deployment as EthereumChains] as Chain,
         });
 
@@ -102,7 +100,7 @@ export default function createEthereum(
             process.env.ETHEREUM_PRIVATE_KEY as Address
           ),
           chain: chains[deployment as EthereumChains] as Chain,
-          transport: http(rpc),
+          transport: http(ethereumConfig.rpcs[deployment as EthereumChains]),
         });
       }
     }
@@ -158,6 +156,8 @@ export default function createEthereum(
       cacher
     );
 
+    console.log("clients", clients);
+
     for (const chain in clients) {
       onBlock(chain, async (block) => {
         for (const task of tasks()) {
@@ -167,7 +167,10 @@ export default function createEthereum(
               block + BigInt(ethereumConfig.blockExecutionBuffer) &&
             !executing()[task.id]
           ) {
+            console.log("executing task", task.id, executing()[task.id]);
             let modifiedTask = task;
+
+            let hookSuccess = true;
 
             for (const hook of task.execute.hooks) {
               if (hook in ethereumConfig.hooks) {
@@ -177,16 +180,21 @@ export default function createEthereum(
                     block
                   );
                 } catch (e) {
+                  log.error("Hook execution error:");
                   log.error(e as string);
+                  hookSuccess = false;
+                  continue;
                 }
               }
             }
 
-            const success = await execute(modifiedTask);
+            if (hookSuccess) {
+              const success = await execute(modifiedTask);
 
-            if (success) {
-              removeTask(modifiedTask.id);
-              continue;
+              if (success) {
+                removeTask(modifiedTask.id);
+                continue;
+              }
             }
 
             if (rescheduledTasks()[modifiedTask.id]) {

@@ -61,7 +61,7 @@ export default function runner(
 
     log.active(`Adding script instance ${identifier}`);
 
-    if (instances.find((_instance) => _instance.id === _instance.id)) {
+    if (instances.find((_instance) => _instance.id === instance.id)) {
       log.error(`Failed to add script instance ${identifier} already exists`);
 
       return false;

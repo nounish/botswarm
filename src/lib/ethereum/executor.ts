@@ -64,25 +64,19 @@ export default function executor<TContracts extends Record<string, Contract>>(
         throw new Error("Failed to execute task");
       }
 
-      const receipt = await client.waitForTransactionReceipt({
-        hash,
-        timeout: 120_000,
-      });
+      log.active(`Waiting for transaction receipt`);
 
-      if (receipt.status === "reverted") {
-        log.error(`
-        Task ${identifier} reverted: {
-          hash: ${colors.magenta(receipt.transactionHash)},
-          chain: ${colors.magenta(task.execute.chain)},
-          block: ${colors.magenta(Number(receipt.blockNumber))},
-          contract: ${colors.magenta(
-            executorConfig.contracts[task.execute.contract].deployments[
-              task.execute.chain
-            ] as string
-          )},
-          function: ${colors.magenta(task.execute.functionName)},
-        }        
-        `);
+      if (task.execute.chain !== "zkSync") {
+        const receipt = await client.waitForTransactionReceipt({
+          hash,
+          timeout: 120_000,
+        });
+
+        log.active(`Checking statuss`);
+
+        if (receipt.status === "reverted") {
+          log.error(`Task reverted with an unknown reason. Hash: ${hash}`);
+        }
       }
 
       log.success(`Task ${identifier} executed sucessfully`);
@@ -91,6 +85,7 @@ export default function executor<TContracts extends Record<string, Contract>>(
     } catch (e) {
       executing[task.id] = false;
 
+      log.error("Task execution error:");
       log.error(e as string);
 
       return false;
@@ -118,10 +113,14 @@ export default function executor<TContracts extends Record<string, Contract>>(
     value?: bigint | number;
   }) {
     try {
+      log.active(`Preparing to write to contract`);
+
       const client = executorConfig.clients[config.chain as string];
       const wallet = executorConfig.wallets[config.chain as string];
 
       const { deployments, abi } = executorConfig.contracts[config.contract];
+
+      log.active(`Estimating gas limit`);
 
       const gasLimit =
         config.gasLimit ??
@@ -139,6 +138,8 @@ export default function executor<TContracts extends Record<string, Contract>>(
           account: wallet.account,
         }));
 
+      log.active(`Running simulation`);
+
       const { request } = await client.simulateContract({
         account: wallet.account,
         address: deployments[config.chain as EthereumChains] as Address,
@@ -155,8 +156,11 @@ export default function executor<TContracts extends Record<string, Contract>>(
         value: config.value ? BigInt(config.value) : undefined,
       });
 
+      log.active(`Writing to contract`);
+
       return wallet.writeContract(request);
     } catch (e) {
+      log.error("Contract write error:");
       if (
         e instanceof BaseError &&
         e.cause instanceof ContractFunctionRevertedError

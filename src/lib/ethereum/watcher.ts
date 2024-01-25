@@ -6,7 +6,12 @@ import type {
   AbiParametersToPrimitiveTypes,
   AbiEvent,
 } from "abitype";
-import type { Address, Log, ReadContractReturnType } from "viem";
+import type {
+  Address,
+  Log,
+  ReadContractReturnType,
+  ContractFunctionName,
+} from "viem";
 import type { MaybeAbiEventName } from "viem/_types/types/contract.js";
 import type { Contract, EthereumChains, EthereumClient } from ".";
 
@@ -85,7 +90,7 @@ export default function watcher<
   async function read<
     TContract extends keyof TContracts,
     TChain extends keyof TContracts[TContract]["deployments"],
-    TFunctionName extends ExtractAbiFunctionNames<
+    TFunctionName extends ContractFunctionName<
       TContracts[TContract]["abi"],
       "view" | "pure"
     >,
