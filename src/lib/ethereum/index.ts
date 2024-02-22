@@ -67,9 +67,7 @@ export default function createEthereum(
     cacheScriptInstances?: EthereumConfig<TContracts>["cacheScriptInstances"];
   }) => {
     const ethereumConfig = {
-      rpcs: {
-        mainnet: "https://rpc.flashbots.net/",
-      },
+      rpcs: {},
       hooks: {},
       scripts: {},
       cacheTasks: true,
@@ -123,7 +121,7 @@ export default function createEthereum(
       cacher
     );
 
-    const { execute, executing, write } = executor(
+    const { execute, executing, write, setExecuting } = executor(
       {
         contracts: config.contracts,
         clients,
@@ -156,8 +154,6 @@ export default function createEthereum(
       cacher
     );
 
-    console.log("clients", clients);
-
     for (const chain in clients) {
       onBlock(chain, async (block) => {
         for (const task of tasks()) {
@@ -167,7 +163,9 @@ export default function createEthereum(
               block + BigInt(ethereumConfig.blockExecutionBuffer) &&
             !executing()[task.id]
           ) {
+            setExecuting(task.id, true);
             console.log("executing task", task.id, executing()[task.id]);
+
             let modifiedTask = task;
 
             let hookSuccess = true;
@@ -193,16 +191,20 @@ export default function createEthereum(
 
               if (success) {
                 removeTask(modifiedTask.id);
+                setExecuting(task.id, false);
                 continue;
               }
             }
 
             if (rescheduledTasks()[modifiedTask.id]) {
               removeTask(modifiedTask.id);
+              setExecuting(task.id, false);
               continue;
             }
 
             rescheduleTask(modifiedTask.id, block + 5n, true);
+
+            setExecuting(task.id, false);
           }
         }
 

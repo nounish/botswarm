@@ -28,8 +28,6 @@ export default function executor<TContracts extends Record<string, Contract>>(
 
   async function execute(task: Task) {
     try {
-      executing[task.id] = true;
-
       const identifier = parseTaskIdentifier(task);
 
       log.active(`Executing task ${identifier}`);
@@ -42,6 +40,8 @@ export default function executor<TContracts extends Record<string, Contract>>(
         throw new Error("Failed to retrieve base fee from block");
       }
 
+      console.log("baseFee", baseFeePerGas);
+
       const priorityFee =
         task.execute.maxBaseFeeForPriority === 0
           ? parseGwei(`${Number(task.execute.priorityFee)}`)
@@ -50,19 +50,23 @@ export default function executor<TContracts extends Record<string, Contract>>(
           ? 0n
           : parseGwei(`${Number(task.execute.priorityFee)}`);
 
+      console.log("priorityFee", priorityFee);
+
       const hash = await write({
         contract: task.execute.contract,
         chain: task.execute.chain as any,
         functionName: task.execute.functionName,
         args: task.execute.args as any,
         maxPriorityFeePerGas: priorityFee,
-        maxFeePerGas: baseFeePerGas + priorityFee,
+        maxFeePerGas: baseFeePerGas + priorityFee + 5n,
         value: task.execute.value,
       });
 
       if (!hash) {
         throw new Error("Failed to execute task");
       }
+
+      console.log("hash", hash);
 
       log.active(`Waiting for transaction receipt`);
 
@@ -173,6 +177,7 @@ export default function executor<TContracts extends Record<string, Contract>>(
   return {
     execute,
     executing: () => executing,
+    setExecuting: (id: string, value: boolean) => (executing[id] = value),
     write,
   };
 }
